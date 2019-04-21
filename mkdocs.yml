@@ -19,6 +19,7 @@ theme:
   font:
     text: Roboto
     code: Roboto Mono
+  favicon: assets/favicon.ico
   logo:
     icon: "\uE80C"
     
@@ -70,6 +71,7 @@ nav:
       - 角色管理: quick/permiss/role.md
       - 用户管理: quick/permiss/user.md
       - 给角色分配数据权限: quick/permiss/role-entityinfo.md
+    - 代码生成器: quick/generator.md
   - 设计详解:
     - 概述: explain/index.md
     - OSharp总体设计: explain/overall-design.md
