@@ -20,8 +20,7 @@ theme:
     text: Roboto
     code: Roboto Mono
   favicon: assets/favicon.ico
-  logo:
-    icon: "\uE80C"
+  logo: 'assets/logo.svg'
     
 # Extensions
 markdown_extensions:
@@ -56,6 +55,7 @@ markdown_extensions:
 
 # Page tree
 nav:
+  - 首页: index.md
   - 快速上手:
     - OSharp简介: quick/intro.md
     - 快速开始: quick/start.md
