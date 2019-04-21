@@ -1,0 +1,56 @@
+# Project information
+site_name: OSharp 文档中心
+site_description: osharp framework documents with markdown
+site_author: osharp.org
+site_url: https:docs.osharp.org/
+
+repo_name: i66soft/osharp
+repo_url: https://github.com/i66soft/osharp
+edit_uri: "https://github.com/i66soft/osharp-docs/docs"
+
+# Copyright
+copyright: 'Copyright &copy; 2014 - 2019 OSHARP.ORG'
+
+theme:
+  name: 'material'
+  language: zh
+  feature:
+    tabs: true
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+# Extensions
+markdown_extensions:
+  - markdown.extensions.admonition
+  - markdown.extensions.codehilite:
+      guess_lang: false
+  - markdown.extensions.def_list
+  - markdown.extensions.footnotes
+  - markdown.extensions.meta
+  - markdown.extensions.toc:
+      permalink: true
+  - pymdownx.arithmatex
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:pymdownx.emoji.to_svg
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: squidfunk
+      repo: mkdocs-material
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Page tree
+nav:
+  - OSharp简介: index.md
