@@ -13,6 +13,15 @@ copyright: 'Copyright &copy; 2014 - 2019 OSHARP.ORG'
 
 theme:
   name: 'material'
+  
+  # 404 page
+  static_templates:
+    - 404.html
+
+  # Don't include MkDocs' JavaScript
+  include_search_page: false
+  search_index_only: true
+
   language: zh
   feature:
     tabs: true
@@ -21,7 +30,19 @@ theme:
     code: Roboto Mono
   favicon: assets/favicon.ico
   logo: 'assets/logo.svg'
-    
+
+# Customization
+extra:
+  social:
+    - type: home
+      link: http://www.osharp.org
+    - type: github-alt
+      link: https://github.com/i66soft/osharp-docs
+    - type: twitter
+      link: https://twitter.com/squidfunk
+    - type: linkedin
+      link: https://linkedin.com/in/squidfunk
+
 # Extensions
 markdown_extensions:
   - markdown.extensions.admonition
@@ -77,7 +98,7 @@ nav:
     - OSharp总体设计: explain/overall-design.md
     - OSharp启动流程: explain/startup.md
     - 功能模块剖析:
-      - 功能模块概述: explain/packs/index.md
+      - 模块系统设计: explain/packs/index.md
       - 核心模块: explain/packs/core.md
       - 依赖注入模块: explain/packs/dependency.md
       - 事件总线模块: explain/packs/eventbus.md
@@ -92,11 +113,16 @@ nav:
         - 各数据驱动应用: explain/packs/efcore/database-provider.md
       - Redis模块: explain/packs/redis.md
       - 数据实体模块: explain/packs/entityinfo.md
+      - MVC功能点模块: explain/packs/mvc-function.md
       - 身份认证模块: explain/packs/identity.md
       - Mvc模块: explain/packs/aspnetcore-mvc.md
       - SignalR模块: explain/packs/signalr.md
       - Hangfire模块: explain/packs/hangfire.md
-      - 权限安全模块: explain/packs/security.md
+      - 权限安全模块: 
+        - 权限安全概述: explain/packs/security/index.md
+        - 功能权限设计: explain/packs/security/function-auth.md
+        - 数据权限设计: explain/packs/security/data-auth.md    
+    - 功能服务剖析:
       - 缓存服务: explain/services/caching.md
       - 查询服务: explain/services/filter.md
   - 视频教程: 
