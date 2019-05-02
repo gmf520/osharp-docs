@@ -110,6 +110,7 @@ public class XXXPack : OsharpPack
 public XXXService : IXXXService, ISingletonDependency
 { }
 ```
+
 这个示例代码将在系统初始化时执行如下的注入行为：
 ``` csharp
 // 空接口的标注方式，统一使用TryAdd来进行注入
