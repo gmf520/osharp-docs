@@ -143,7 +143,7 @@ nav:
   - 视频教程: 
     - 视频教程概述: videos/index.md
   - API文档:
-    - API文档概述: api/index.md
+    - API文档概述: api
   - 常见问题: 
     - 常见问题概述: faq/index.md
   - 关于:
