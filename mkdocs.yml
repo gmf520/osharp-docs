@@ -1,5 +1,5 @@
 # Project information
-site_name: OSharp 文档中心
+site_name: 'OSharp 文档中心'
 site_description: osharp framework documents with markdown
 site_author: osharp.org
 site_url: https://docs.osharp.org/
@@ -8,28 +8,31 @@ repo_name: i66soft/osharp
 repo_url: https://github.com/i66soft/osharp
 edit_uri: "https://github.com/i66soft/osharp-docs/edit/master/docs"
 
+# serve
+dev_addr: 127.0.0.1:4205
+
 # Copyright
 copyright: 'Copyright &copy; 2014 - 2019 OSHARP.ORG'
 
 theme:
   name: 'material'
+  language: 'zh'
+  favicon: 'assets/favicon.ico'
+  logo: 'assets/logo.svg'
   
-  # 404 page
-  static_templates:
-    - 404.html
-
-  # Don't include MkDocs' JavaScript
-  include_search_page: false
-  search_index_only: true
-
-  language: zh
   feature:
     tabs: true
   font:
     text: Roboto
     code: Roboto Mono
-  favicon: assets/favicon.ico
-  logo: 'assets/logo.svg'
+
+  # 404 page
+  static_templates:
+    - 404.html
+
+  # Don't include MkDocs' JavaScript
+  include_search_page: true
+  search_index_only: false
 
 # Customization
 extra:
@@ -38,13 +41,23 @@ extra:
       link: http://www.osharp.org
     - type: github-alt
       link: https://github.com/i66soft/osharp-docs
-    - type: twitter
-      link: https://twitter.com/squidfunk
-    - type: linkedin
-      link: https://linkedin.com/in/squidfunk
+    - type: rss-square
+      link: https://www.cnblogs.com/guomingfeng
+    # - type: linkedin
+    #   link: https://linkedin.com/in/squidfunk
+
+# css, js
+extra_css:
+  - 'assets/css/custom.css'
+  - 'assets/css/simpleLightbox.min.css'
+extra_javascript:
+  - 'assets/js/jquery.min.js'
+  - 'assets/js/simpleLightbox.min.js'
+  - 'assets/js/custom.js'
 
 # Extensions
 markdown_extensions:
+  - markdown.extensions.attr_list
   - markdown.extensions.admonition
   - markdown.extensions.codehilite:
       guess_lang: false
@@ -73,6 +86,8 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tilde
+  - toc:
+      permalink: true
 
 # Page tree
 nav:
@@ -94,7 +109,7 @@ nav:
       - 给角色分配数据权限: quick/permiss/role-entityinfo.md
     - 代码生成器: quick/generator.md
   - 设计详解:
-    - 概述: explain/index.md
+    - 设计详解概述: explain/index.md
     - OSharp总体设计: explain/overall-design.md
     - OSharp启动流程: explain/startup.md
     - 功能模块剖析:
@@ -126,11 +141,11 @@ nav:
       - 缓存服务: explain/services/caching.md
       - 查询服务: explain/services/filter.md
   - 视频教程: 
-    - 概述: videos/index.md
+    - 视频教程概述: videos/index.md
   - API文档:
-    - 概述: api/index.md
+    - API文档概述: api/index.md
   - 常见问题: 
-    - 概述: faq/index.md
+    - 常见问题概述: faq/index.md
   - 关于:
     - 关于OSharp: about/index.md
     - 更新日志: about/update-logs.md
