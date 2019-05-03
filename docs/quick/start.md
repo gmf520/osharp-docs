@@ -153,3 +153,135 @@ OSharp 的 [Vue](https://cn.vuejs.org/index.html) ![](https://img.shields.io/npm
 ![创建项目演示](../assets/imgs/quick/start/001.gif "创建项目演示"){.img-fluid tag=1}
 
 ## 打开项目，让项目跑起来
+
+### 使用VS2019打开后端 .NetCore 解决方案
+使用 VS2019 打开 解决方案文件 `Liuliu.Blogs.sln`，可以看到各个工程之间的引用关系已经配置好了，OSharp框架的各个依赖类库也已引用了 nuget.org 上的相应版本，并将自动完成类库还原。
+
+解决方案项目结构如下：
+```
+Liuliu.Blogs                                # 解决方案根目录
+└─src                                       # 源代码
+    ├─Liuliu.Blogs.Core                     # 业务层
+    │  ├─Common                             # 通用业务服务
+    │  ├─Identity                           # 身份认证模块业务服务
+    │  │  ├─Dtos                            # 身份认证模块传输DTO
+    │  │  ├─Entities                        # 身份认证模块数据实体
+    │  │  └─Events                          # 身份认证模块事件处理器
+    │  ├─Security                           # 权限安全模块业务服务
+    │  └─Systems                            # 系统模块业务服务
+    ├─Liuliu.Blogs.EntityConfiguration      # 实体类数据库映射配置工程
+    │  ├─Identity                           # 身份认证模块实体类配置
+    │  ├─Security                           # 权限安全模块实体类配置
+    │  └─Systems                            # 系统模块实体类配置
+    └─Liuliu.Blogs.Web                      # Web工程
+       ├─Areas                              # 区域文件夹
+       │  └─Admin                           # 管理区域
+       │      └─Controllers                 # 管理API控制器
+       │          ├─Identity                # 身份认证模块API
+       │          ├─Security                # 权限安全模块API
+       │          └─Systems                 # 系统模块API
+       ├─Controllers                        # 前台API
+       ├─Hangfire                           # Hangfire后台工作
+       ├─Migrations                         # 数据库迁移
+       └─Startups                           # 启动相关代码
+```
+
+* Liuliu.Demo.Core： 业务核心工程，顶层文件夹以业务模块内聚，每个文件夹按职责划分文件夹，通常可包含传输对象`Dtos`、实体类型`Entities`、事件处理`Events`等，业务接口IXXXContract与业务实现IXXXService放在外边，如果文件数量多的话也可以建文件夹存放。
+* Liuliu.Demo.EntityConfiguration： EFCore实体映射工程，用于配置各个业务实体映射到数据库的映射细节。文件夹也推荐按模块内聚。
+* Liuliu.Demo.Web： 网站的Hosting项目，按常规方式使用即可
+
+我们仍需做一点小工作，才能让后端工程跑起来：
+
+1. 将 Web 工程 `Liuliu.Blogs.Web` 设置为启动项目
+2. 打开配置文件 `appsettings.Development.json`，启用相应数据库连接配置，并将数据库连接用户名和密码改为本地环境的用户名和密码
+    ```
+    "SqlServer": {
+      "DbContextTypeName": "OSharp.Entity.DefaultDbContext,OSharp.EntityFrameworkCore",
+      "ConnectionString": "Server=.;Database=Liuliu.Blogs-dev;User Id={==sa==};
+          Password={==Abc123456!==};MultipleActiveResultSets=true",
+      "DatabaseType": "SqlServer",
+      "LazyLoadingProxiesEnabled": true,
+      "AuditEntityEnabled": true,
+      "AutoMigrationEnabled": true
+    }
+
+    ```
+
+!!! warning "注意"
+    数据库配置中，同一上下文（相同的 `DbContextTypeName`）只能配置一种数据库类型（`DatabaseType`），并且要保持在 `appsettings.json` 和 `appsettings.Development.json` 范围内 **全局唯一**，否则将会引发异常无法正常启动。
+
+完成配置后，在 VS2019 上按 `Ctrl+F5` 启动项目，将看到项目正常启动（前提是你已经安装好了相应版本的 .NetCore SDK）。我们将在浏览器看到 `Swagger` 的API页面：
+![Swagger API页面](../assets/imgs/quick/start/002.png "Swagger API页面"){.img-fluid tag=2}
+
+打开相应的数据库管理软件（本次使用MSSQL，这里使用VS2019自带的 `SQL Server 对象资源管理器`），可以看到数据库已经自动生成，并且必要基础数据已经初始化完成：
+![初始化的数据库](../assets/imgs/quick/start/003.png "初始化的数据库"){.img-fluid tag=3}
+
+
+### 使用VSCode打开前端 Angular 项目
+
+使用 VS Code 打开 `src/ui/ng-alain` 文件夹，前端项目是基于 NG-ALAIN，项目结构如下：
+    ```
+    ├── _mock                                       # Mock 数据规则
+    ├── src
+    │   ├── app
+    │   │   ├── core                                # 核心模块
+    │   │   │   ├── i18n
+    │   │   │   ├── net
+    │   │   │   │   └── default.interceptor.ts      # 默认HTTP拦截器
+    │   │   │   ├── services
+    │   │   │   │   └── startup.service.ts          # 初始化项目配置
+    │   │   │   └── core.module.ts                  # 核心模块文件
+    │   │   ├── layout                              # 通用布局
+    │   │   ├── routes
+    │   │   │   ├── **                              # 业务目录
+    │   │   │   ├── routes.module.ts                # 业务路由模块
+    │   │   │   └── routes-routing.module.ts        # 业务路由注册口
+    │   │   ├── shared                              # 共享模块
+    │   │   │   └── shared.module.ts                # 共享模块文件
+    │   │   ├── app.component.ts                    # 根组件
+    │   │   └── app.module.ts                       # 根模块
+    │   │   └── delon.module.ts                     # @delon模块导入
+    │   ├── assets                                  # 本地静态资源
+    │   ├── environments                            # 环境变量配置
+    │   ├── styles                                  # 样式目录
+    └── └── style.less                              # 样式引导入口
+    ```
+
+按 `Ctrl+Tab` 快捷键，调出 VS Code 的命令行控制台，输入 NodeJS 包安装命令：
+
+> npm install
+
+依赖包安装完成之后，输入项目启动命令
+
+> npm start
+
+此命令将会执行如下命令：`ng serve --port 4201 --proxy-config proxy.config.json --open`，其中`--proxy-config proxy.config.json`对前端项目发起的API请求进行了代理，所有以 `/api/`开头的请求，都会转发到服务端项目中进行处理，代理的实际配置如下：
+
+```
+{
+  "/api": {
+    "target": "http://localhost:7001",
+    "secure": false
+  }
+}
+```
+
+至此，项目启动完成，将进入登录界面，如下图所示：
+![用户登录界面](../assets/imgs/quick/start/004.png "用户登录界面"){.img-fluid tag=4}
+
+需要注册一个用户，才能进入系统。
+
+!!! attention 注意
+    第一个注册用户将自动拥有 **最高权限** 的 **超级管理员** 角色身份。
+
+注册界面：
+![注册界面](../assets/imgs/quick/start/005.png "注册界面"){.img-fluid tag=5}
+
+后台主页：
+![后台主页](../assets/imgs/quick/start/006.png "后台主页"){.img-fluid tag=6}
+
+功能管理：
+![功能管理](../assets/imgs/quick/start/007.png "功能管理"){.img-fluid tag=7}
+
+数据实体管理：
+![数据实体管理](../assets/imgs/quick/start/008.png "数据实体管理"){.img-fluid tag=8}
