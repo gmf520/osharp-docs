@@ -150,6 +150,6 @@ OSharp 的 [Vue](https://cn.vuejs.org/index.html) ![](https://img.shields.io/npm
 
 至此，一个完整的项目启动解决方案创建完成。
 完整的创建过程演示如下：
-![创建项目演示](../../assets/imgs/quick/start/001.gif "创建项目演示"){.img-fluid}
+![创建项目演示](../assets/imgs/quick/start/001.gif "创建项目演示"){.img-fluid tag=1}
 
 ## 打开项目，让项目跑起来
