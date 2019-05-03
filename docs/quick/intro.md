@@ -7,7 +7,7 @@ OSharpNS全称OSharp Framework with .NetStandard2.0，是一个基于`.NetStanda
 
 框架的工程组织结构如下：
 
-![框架工程组织结构](../assets/imgs/quick/intro/001.png){.img-fluid tag=1 title="框架工程组织结构"}
+![框架工程组织结构](../assets/imgs/quick/intro/001.png "框架工程组织结构"){.img-fluid tag=1}
 
 ### 各工程简介
 
@@ -96,7 +96,32 @@ public class XXXPack : OsharpPack
 ```
 
 当前框架的模块组成如下图：
-![模块组成](../assets/imgs/quick/intro/002.png){.img-fluid tag=2 title="模块组成"}
+
+ | 名称                               | 类型                                                            | 级别        |
+ | ---------------------------------- | --------------------------------------------------------------- | ----------- |
+ | OSharp核心模块                     | OSharp.Core.Packs.OsharpCorePack                                | Core        |
+ | 依赖注入模块                       | OSharp.Dependency.DependencyPack                                | Core        |
+ | Log4Net模块                        | OSharp.Log4Net.Log4NetPack                                      | Core        |
+ | AspNetCore模块                     | OSharp.AspNetCore.AspNetCorePack                                | Core        |
+ | 事件总线模块                       | OSharp.EventBuses.EventBusPack                                  | Core        |
+ | AutoMapper模块                     | OSharp.AutoMapper.AutoMapperPack                                | Framework   |
+ | Hangfire后台任务模块               | OSharp.Hangfire.HangfirePack                                    | Framework   |
+ | Redis模块                          | OSharp.Redis.RedisPack                                          | Framework   |
+ | MySqlEntityFrameworkCore模块       | OSharp.Entity.MySql.MySqlEntityFrameworkCorePack                | Framework   |
+ | SqliteEntityFrameworkCore模块      | OSharp.Entity.Sqlite.SqliteEntityFrameworkCorePack              | Framework   |
+ | SqlServerEntityFrameworkCore模块   | OSharp.Entity.SqlServer.SqlServerEntityFrameworkCorePack        | Framework   |
+ | SqlServer-DefaultDbContext迁移模块 | OSharp.Site.Web.Startups.SqlServerDefaultDbContextMigrationPack | Framework   |
+ | MVC功能点模块                      | OSharp.AspNetCore.Mvc.MvcFunctionPack                           | Application |
+ | 数据实体模块                       | OSharp.Core.EntityInfos.EntityInfoPack                          | Application |
+ | 系统信息模块                       | OSharp.Systems.SystemPack                                       | Application |
+ | 身份认证模块                       | OSharp.Site.Identity.IdentityPack                               | Application |
+ | MVC模块                            | OSharp.Site.Web.Startups.AspNetCoreMvcPack                      | Application |
+ | SignalR模块                        | OSharp.Site.Web.Startups.SignalRPack                            | Application |
+ | 权限安全模块                       | OSharp.Site.Security.SecurityPack                               | Application |
+ | 代码生成模块                       | OSharp.Site.Web.Startups.CodeGeneratorPack                      | Application |
+ | SwaggerApi模块                     | OSharp.Swagger.SwaggerPack                                      | Application |
+ | 审计模块                           | OSharp.Site.Systems.AuditPack                                   | Application |
+
 
 ### 2. 自动化的依赖注入注册机制
 
@@ -166,13 +191,13 @@ services.TryAdd(new ServiceDescriptor(typeof(XXXService),
 * 将角色`Role`分配给用户`User`
 * 可将模块`Module`分配给用户`User`，解决特权问题
 * 这样用户即可根据拥有的角色，自动拥有模块对应着的所有功能点的功能权限 
-![功能权限授权示意](../assets/imgs/quick/intro/004.png){.img-fluid tag=4 title="功能权限授权示意"}
+![功能权限授权示意](../assets/imgs/quick/intro/004.png "功能权限授权示意"){.img-fluid tag=4}
 
 #### 功能权限验证流程
 * 系统初始化时，根据每个角色`Role`分配到的模块`Module`，自动初始化每个 `角色 Role - Function[] `的权限对应关系并缓存
 * 游客进入系统时，自动请求所有可匿名访问`FunctionAccessType.Anonymouse`的模块信息并缓存到浏览器，浏览器根据这个缓存的模块集合，对前端页面的各个操作点（菜单/按钮）进行是否隐藏/禁用的状态控制
 * 注册用户登录系统时，自动请求所有可执行（包括匿名的`FunctionAccessType.Anonymouse`、登录的`FunctionAccessType.Logined`、指定角色的`FunctionAccessType.RoleLimit`）的模块信息并缓存到浏览器，浏览器根据这个缓存的模块集合，对前端页面的各个操作点（菜单/按钮）进行是否隐藏/禁用的状态控制
-![功能权限初始化](../assets/imgs/quick/intro/005.png){.img-fluid tag=5 title="功能权限初始化"}
+![功能权限初始化](../assets/imgs/quick/intro/005.png "功能权限初始化"){.img-fluid tag=5}
 * 用户`User`执行一个功能点`Function`时，验证流程如下：
     * 功能点不存在时，返回404
     * 功能点被锁定时，返回423
@@ -184,14 +209,14 @@ services.TryAdd(new ServiceDescriptor(typeof(XXXService),
         * 由分配给用户的模块`Module`对应的功能点，获取到`User-Function[]`（并缓存），`Function[]`包含要验证的功能点时，验证通过
         * 验证未通过，返回403
         
-![功能权限验证流程](../assets/imgs/quick/intro/006.png){.img-fluid tag=6 title="功能权限验证流程"}
+![功能权限验证流程](../assets/imgs/quick/intro/006.png "功能权限验证流程"){.img-fluid tag=6}
 
 
 #### 数据权限授权流程
 * 基于 角色`Role`-实体`EntityInfo` 的一一对应关系，配置指定角色对指定数据实体的数据查询筛选规则，并持久化到数据库中
 * 数据查询筛选规则组成为 条件组`FilterGroup`和条件`FilterRule`，一个条件组 [FilterGroup](http://docs.osharp.org/api/OSharp.Filter.FilterGroup.html) 包含 一个或多个条件 [FilterRule](http://docs.osharp.org/api/OSharp.Filter.FilterRule.html) 和 一个或多个 条件组`FilterGroup`，这样就实现了条件组和条件的无限嵌套，能满足绝大多数数据筛选规则的组装需要，如下图：
 
-![数据权限授权](../assets/imgs/quick/intro/003.png){.img-fluid tag=3 title="数据权限授权"}
+![数据权限授权](../assets/imgs/quick/intro/003.png "数据权限授权"){.img-fluid tag=3}
 
 #### 数据权限验证流程
 * 系统初始化时，将所有`角色-实体`的数据筛选规则缓存到内存中
