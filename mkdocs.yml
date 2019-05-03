@@ -32,7 +32,7 @@ theme:
 
   # Don't include MkDocs' JavaScript
   include_search_page: true
-  search_index_only: false
+  search_index_only: true
 
 # Customization
 extra:
@@ -61,6 +61,7 @@ markdown_extensions:
   - markdown.extensions.admonition
   - markdown.extensions.codehilite:
       guess_lang: false
+      linenums: true
   - markdown.extensions.def_list
   - markdown.extensions.footnotes
   - markdown.extensions.meta

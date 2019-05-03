@@ -18,7 +18,7 @@ OSharp 框架的后端是基于 .NetCore 的最新稳定版本的，目前最新
 > dotnet --info
 
 我的电脑输出如下，可以看到，已经安装了 `2.2.203` 版本的 SDK 和 `2.2.4` 版本的 Runtime：
-```
+``` hl_lines="17 20"
 .NET Core SDK（反映任何 global.json）:
  Version:   2.2.203
  Commit:    e5bab63eca
@@ -52,7 +52,8 @@ To install additional .NET Core runtimes or SDKs:
 > https://visualstudio.microsoft.com/zh-hans/downloads/
 
 
-> 补充：当使用 Visual Studio 时，Resharper 这个插件是个不可错过的插件，可以在 智能提示、变量命名、代码优化、代码重构、代码结构导航、dll反编译查看源代码等方面对 Visual Studio 进行大量不可多得的功能补充。当然，这个插件比较吃资源，需要你有一台性能优良的硬件机器才能流畅使用。
+!!! note "补充"
+    当使用 Visual Studio 时，Resharper 这个插件是个不可错过的插件，可以在 智能提示、变量命名、代码优化、代码重构、代码结构导航、dll反编译查看源代码等方面对 Visual Studio 进行大量不可多得的功能补充。当然，这个插件比较吃资源，需要你有一台性能优良的硬件机器才能流畅使用。
 
 #### 数据库
 OSharp 框架的数据存储是基于 EntityFrameworkCore (简称EFCore) 这个ORM实现的，只要 EFCore 支持的数据库，都可以作为 OSharp 的数据存储，现已支持数据库如下：
@@ -81,11 +82,74 @@ OSharp 的 [Vue](https://cn.vuejs.org/index.html) ![](https://img.shields.io/npm
 首先，需要通过 npm 命令全局安装 @@vue/cli ![](https://img.shields.io/npm/v/@vue/cli.svg) 运行环境
 > npm install -g @@vue/cli
 
-> 由于精力有限及优先级的问题，Vue版本现在尚未开发完成。
-
+!!! attention
+    由于精力有限及优先级的问题，Vue版本现在尚未开发完成。
 
 ## 项目初始化
 
+每一个新项目，都离不开身份认证，权限授权，系统配置，还有相应的前端操作界面等基础而重复的工作，如果每一个新项目都要从０开始做这些重复性工作，是很无味而繁琐的。因此，OSharp 框架制作了一个基于 `dotnet cli` 命令行工具的快速启动模板 [OSharpNS.Template.Mvc_Angular](https://www.nuget.org/packages/OSharpNS.Template.Mvc_Angular/) ![](https://img.shields.io/nuget/v/OSharpNS.Template.Mvc_Angular.svg)，一键搞定这些重复性的模块，让项目启动不再繁琐。下面让我们一起来启动一个新项目。
 
+### 安装 OSharp 的 dotnet new 项目模板
+!!! node
+    安装项目模板的前提，是已经按照前面的要求下载安装好了 .NetCore SDK。[>>飞机票](#netcore-sdk)
 
-## 打开项目，运行项目
+在任意空白文件夹，打开 `cmd` 或 `powershell` 命令行窗口，执行如下命令安装或更新 OSharp .NetCore CLI 项目模板
+> dotnet new -i OSharpNS.Template.Mvc_Angular
+
+执行后，将能看到 `osharp_xxx` 系列的命令已安装到 .NetCore CLI 列表中
+
+| Name                               | Command             | Language | Path           |
+| ---------------------------------- | ------------------- | -------- | -------------- |
+| OSharp Build Command File          | osharp              | [C#]     | Web/MVC/OSHARP |
+| OSharp Solution Project            | osharp_sln          | [C#]     | Web/MVC/OSHARP |
+| OSharp Service Core Project        | osharp_core         | [C#]     | Web/MVC/OSHARP |
+| OSharp EntityConfiguration Project | osharp_entityconfig | [C#]     | Web/MVC/OSHARP |
+| OSharp MVC Project                 | osharp_mvc          | [C#]     | Web/MVC/OSHARP |
+| OSharp Angular Project             | osharp_ng           | Angular  | Web/MVC/OSHARP |
+
+其中 `osharp` 是个一键命令，可通过此命令创建一个完整的项目启动解决方案。下面，我们以创建一个 **博客系统** 为例，完整的步骤如下：
+
+1. 执行 osharp 命令，得到一个 `osharp.cmd` 脚本文件
+
+    > dotnet new osharp
+
+    输出：
+    ```
+    已成功创建模板“OSharp Build Command File”。
+    ```
+
+2. 打开 `osharp.cmd` 脚本文件，进行解决方案生成
+
+    > ./osharp.cmd
+
+    输出：
+    ```
+    －－－－－－－－－－－－－－－－－－－－－－－－－
+    - 欢迎使用 OSharp一键模板 命令
+    - http://www.osharp.org
+    - Copyright @ 2014 - 2019 OSHARP.ORG
+    －－－－－－－－－－－－－－－－－－－－－－－－－
+    请输入项目名称，推荐形如 “公司.项目”的模式：
+    ```
+
+3. 按要求的格式 **公司.项目** 输入项目名称，即生成项目的主命名空间。
+
+    例如，公司的代码为 Liuliu，要创建一个博客系统，则输入 **Liuliu.Blogs** 
+
+    > Liuliu.Blogs
+
+    输出：
+    ```
+    已成功创建模板“OSharp Solution Project”。
+    已成功创建模板“OSharp Service Core Project”。
+    已成功创建模板“OSharp EntityConfiguration Project”。
+    已成功创建模板“OSharp MVC Project”。
+    已成功创建模板“OSharp Angular Project”。
+    项目代码生成完成
+    ```
+
+至此，一个完整的项目启动解决方案创建完成。
+完整的创建过程演示如下：
+![创建项目演示](../../assets/imgs/quick/start/001.gif "创建项目演示"){.img-fluid}
+
+## 打开项目，让项目跑起来
