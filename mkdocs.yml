@@ -97,7 +97,7 @@ nav:
     - OSharp简介: quick/intro.md
     - 快速开始: quick/start.md
     - 步步为营:
-      - 设计一个博客模块: quick/steps/index.md
+      - 业务模块设计: quick/steps/index.md
       - 添加业务数据层: quick/steps/entity.md
       - 添加业务服务层: quick/steps/service.md
       - 添加业务对外API: quick/steps/controller.md
