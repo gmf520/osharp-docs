@@ -191,7 +191,7 @@ public interface ISoftDeletable
 
 ### 博客模块的实体类定义
 
-回到我们的 `Liuliu.Blogs` 项目，根据 [模块文件夹结构布局](index.md#_3)给出的结构，在 `Liuliu.Blogs.Core` 项目中创建 `Blogs/Entities` 的文件夹存放实体类，添加如下实体类文件。
+回到我们的 `Liuliu.Blogs` 项目，根据 [业务模块设计#模块文件夹结构布局](index.md#_3)给出的结构，在 `Liuliu.Blogs.Core` 项目中创建 `Blogs/Entities` 的文件夹存放实体类，添加如下实体类文件。
 
 #### 博客实体 - Blog
 ```C#
@@ -350,7 +350,7 @@ public interface IInputDto<TKey>
 
 ### 博客模块的输入输出DTO类定义
 
-回到我们的 `Liuliu.Blogs` 项目，根据 [模块文件夹结构布局](index.md#_3)给出的结构，在 `Liuliu.Blogs.Core` 项目中创建 `Blogs/Dtos` 的文件夹存放实体类，添加如下输入输出DTO类文件。
+回到我们的 `Liuliu.Blogs` 项目，根据 [业务模块设计#模块文件夹结构布局](index.md#_3)给出的结构，在 `Liuliu.Blogs.Core` 项目中创建 `Blogs/Dtos` 的文件夹存放实体类，添加如下输入输出DTO类文件。
 
 #### 博客 - Blog
 
@@ -601,11 +601,11 @@ public abstract class EntityTypeConfigurationBase<TEntity, TKey> : IEntityTypeCo
 
 ### 博客模块的实体映射配置类实现
 
-回到我们的 `Liuliu.Blogs` 项目，根据 [模块文件夹结构布局](index.md#_3)给出的结构，在 `Liuliu.Blogs.EntityConfiguration` 项目中创建 `Blogs` 的文件夹存放实体类，添加如下实体映射配置类文件。
+回到我们的 `Liuliu.Blogs` 项目，根据 [业务模块设计#模块文件夹结构布局](index.md#_3)给出的结构，在 `Liuliu.Blogs.EntityConfiguration` 项目中创建 `Blogs` 的文件夹存放实体类，添加如下实体映射配置类文件。
 
 
 #### 博客 - Blog
-根据 [设计一个博客模块#数据层](index.md#_5)的定义，博客实体的设计要求`Url`属性 **唯一索引**，并且 **博客与博主** 之间的关系是 **一对一**，因此做如下约束：
+根据 [业务模块设计#数据层](index.md#_5)的定义，博客实体的设计要求`Url`属性 **唯一索引**，并且 **博客与博主** 之间的关系是 **一对一**，因此做如下约束：
 
 1. 创建`Url`属性的唯一索引，形式本应是`builder.HasIndex(m => m.Url)`，但博客实体引入了逻辑删除，因此唯一索引应加入逻辑删除属性`DeletedTime`
 2. 博客实体与用户实体之间以`UserId`为外键，建立一对一关系，并且对于一个博客来说，其拥有者是必须的，因此需要加上`IsRequired`约束，并禁止级联删除。
@@ -629,7 +629,7 @@ public class BlogConfiguration : EntityTypeConfigurationBase<Blog, int>
 ```
 
 #### 文章 - Post
-根据 [设计一个博客模块#数据层](index.md#_5)的定义，文章实体的设计要求 **文章与博客** 之间的关系是 **多对一**，**文章与作者** 之间的关系是 **多对一**，因此做如下约束：
+根据 [业务模块设计#数据层](index.md#_5)的定义，文章实体的设计要求 **文章与博客** 之间的关系是 **多对一**，**文章与作者** 之间的关系是 **多对一**，因此做如下约束：
 
 1. 文章实体与博客实体之间以`BlogId`为外键，建立多对一关系，并且对于一篇文章来说，其所在博客是必须的，因此需要加上`IsRequired`约束，并禁止级联删除。
 2. 文章实体与用户实体之间以`UserId`为外键，建立多对一关系，并且对于一篇文章来说，其作者是必须的，因此需要加上`IsRequired`约束，并禁止级联删除。

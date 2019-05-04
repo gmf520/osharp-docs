@@ -1,7 +1,7 @@
 # OSharp简介
 ---
 ## 什么是OSharp
-OSharpNS全称OSharp Framework with .NetStandard2.0，是一个基于`.NetStandard2.0`开发的一个`.NetCore`快速开发框架。这个框架使用最新稳定版的`.NetCore SDK`（当前是.NET Core 2.2），对 AspNetCore 的配置、依赖注入、日志、缓存、实体框架、Mvc(WebApi)、身份认证、权限授权等模块进行更高一级的自动化封装，并规范了一套业务实现的代码结构与操作流程，使 .Net Core 框架更易于应用到实际项目开发中。
+OSharpNS 全称 OSharp Framework with .NetStandard2.0，是一个基于`.NetStandard2.0`开发的一个`.NetCore`快速开发框架。这个框架使用最新稳定版的`.NetCore SDK`（当前是.NET Core 2.2），对 AspNetCore 的配置、依赖注入、日志、缓存、实体框架、Mvc(WebApi)、身份认证、权限授权等模块进行更高一级的自动化封装，并规范了一套业务实现的代码结构与操作流程，使 .Net Core 框架更易于应用到实际项目开发中。
 
 ## 框架工程组织
 
@@ -128,7 +128,8 @@ public class XXXPack : OsharpPack
 #### 空接口标注方式
 框架定义了[ISingletonDependency](https://docs.osharp.org/api/OSharp.Dependency.ISingletonDependency.html)，[IScopeDependency](https://docs.osharp.org/api/OSharp.Dependency.IScopeDependency.html)，[ITransientDependency](https://docs.osharp.org/api/OSharp.Dependency.ITransientDependency.html) 三个空接口，对应着依赖注入的`ServiceLifetime.Singleton`、`ServiceLifetime.Scoped`、`ServiceLifetime.Transient`三种服务生命周期。按需要实现了空接口的服务类，将在系统初始化时被检索出来进行实现类与其接口的依赖注入服务注册。
 
-注：**空接口的标注方式，统一使用TryAdd来进行注入**
+!!! node "注意"
+    空接口的标注方式，统一使用 **TryAdd** 来进行注入
 
 一个示例代码如下：
 ``` csharp
