@@ -1,10 +1,13 @@
 # 设计一个博客模块(BlogsPack)
 ---
-## Pack模块简介
+## 概述
+本系列教程中，我们将一步一步实现一个博客(BlogsPack)的业务模块，并对使用OSharp框架进行业务实现的过程涉及的框架知识进行全面的讲解。通过学习本系列教程，你将对OSharp框架的业务实现有个较全面的了解。
 
-Pack模块是应用程序中的一个高内聚的子系统，负责完成一类功能或者一系列相关联的业务处理，是构建 OSharp 应用程序的基本功能单元。一系列低耦合的Pack模块共同组合在一起创建一个 OSharp 应用程序。每个 Pack模块是以一个实现了模块基类（[OsharpPack](https://docs.osharp.org/api/OSharp.Core.Packs.OsharpPack.html)）的类作为入口的，这个类完成本模块的服务添加（AddService）和模块初始化工作（UsePack）。本系列教程中，我们将一步一步实现一个博客模块，通过这个博客模块，可以给应用程序添加一个完整的博客功能。
+## Pack模块简介
+Pack模块是应用程序中的一个高内聚的子系统，负责完成一类功能或者一系列相关联的业务处理，是构建 OSharp 应用程序的基本功能单元。一系列低耦合的Pack模块共同组合在一起创建一个 OSharp 应用程序。每个 Pack模块是以一个实现了模块基类（[OsharpPack](https://docs.osharp.org/api/OSharp.Core.Packs.OsharpPack.html)）的类作为入口的，这个类完成本模块的服务添加（AddService）和模块初始化工作（UsePack）。
 
 OsharpPack 基类定义如下：
+
 ``` csharp
 /// <summary>
 /// OSharp模块基类
@@ -57,8 +60,57 @@ public abstract class OsharpPack
 }
 ```
 
-## 业务Pack模块包含什么
+## 业务模块包含什么
 一个完整的业务模块，要实现一系列相关联的业务功能，需要一个完整的 **数据层 - 服务层 - WebAPI层 - 前端UI层** 的代码链的支持，各个层次各司其职，共同来完成当前模块的业务处理。
+
+### 业务模块文件夹结构布局
+OSharp框架有一套推荐的模块文件夹布局方案，根据该方案，博客`Blogs`模块的 **后端文件夹** 结构推荐如下：
+
+```
+src
+├─Liuliu.Blogs.Core
+│  └─Blogs
+│      ├─BlogsPack.cs
+│      ├─BlogsService.cs
+│      ├─BlogsService.Blog.cs
+│      ├─BlogsService.Post.cs
+│      ├─IBlogsContract.cs
+│      ├─Dtos
+│      │    ├─BlogInputDto.cs
+│      │    ├─BlogOutputDto.cs
+│      │    ├─PostInputDto.cs
+│      │    └─PostOutputDto.cs
+│      └─Entities
+│           ├─Blog.cs
+│           └─Post.cs
+├─Liuliu.Blogs.EntityConfiguration
+│  └─Blogs
+│      ├─BlogConfiguration.cs
+│      └─PostConfiguration.cs
+└─Liuliu.Blogs.Web
+    └─Areas
+       └─Admin
+            └─Controllers
+                └─Blogs
+                    ├─BlogController.cs
+                    └─PostController.cs
+```
+
+博客`Blogs`模块相应的 Angular **前端文件夹** 结构推荐如下：
+```
+src
+└─app
+   └─routes
+       └─blogs
+           ├─blogs.module.ts
+           ├─blogs.routing.ts
+           ├─blog
+           │   ├─blog.component.html
+           │   └─blog.component.ts
+           └─post
+                ├─post.component.html
+                └─post.component.ts
+```
 
 ### 博客业务需求分析
 
@@ -85,20 +137,22 @@ OSharp的数据层，主要是 **数据实体** 的定义，只要数据实体�
     | Id          | int      | 博客编号     | 主键，唯一   | 是       | 是        |
     | Url         | string   | 博客地址     | 唯一         | 是       | 是        |
     | Display     | string   | 博客显示名称 |              | 是       | 是        |
-    | IsEnabled   | boolean  | 已开通       |              | 是       | 是        |
+    | IsEnabled   | boolean  | 已开通       |              | 否       | 是        |
     | CreatedTime | DateTime | 创建时间     |              | 否       | 是        |
-    | UserId      | int      | 作者编号     | 外键，一对一 | 是       | 是        |
+    | DeletedTime | DateTime | 逻辑删除时间 | 可空         | 否       | 否        |
+    | UserId      | int      | 博主编号     | 外键，一对一 | 否       | 是        |
 
 * 文章 - Post
 
-    | 字段        | 数据类型 | 描述     | 备注         | InputDto | OutputDto |
-    | ----------- | -------- | -------- | ------------ | -------- | --------- |
-    | Id          | int      | 文章编号 | 主键，唯一   | 是       | 是        |
-    | Title       | string   | 文章标题 |              | 是       | 是        |
-    | Content     | string   | 文章内容 |              | 是       | 是        |
-    | CreatedTime | DateTime | 创建时间 |              | 否       | 是        |
-    | BlogId      | int      | 博客Id   | 外键，多对一 | 是       | 是        |
-    | UserId      | int      | 作者编号 | 外键，多对一 | 是       | 是        |
+    | 字段        | 数据类型 | 描述         | 备注         | InputDto | OutputDto |
+    | ----------- | -------- | ------------ | ------------ | -------- | --------- |
+    | Id          | int      | 文章编号     | 主键，唯一   | 是       | 是        |
+    | Title       | string   | 文章标题     |              | 是       | 是        |
+    | Content     | string   | 文章内容     |              | 是       | 是        |
+    | CreatedTime | DateTime | 创建时间     |              | 否       | 是        |
+    | DeletedTime | DateTime | 逻辑删除时间 | 可空         | 否       | 否        |
+    | BlogId      | int      | 博客Id       | 外键，多对一 | 否       | 是        |
+    | UserId      | int      | 作者编号     | 外键，多对一 | 否       | 是        |
 
 ### 服务层
 服务层负责实现模块的业务处理，是整个系统的最核心部分，一个系统有什么功能，能对外提供什么样的服务，都是在服务层实现的。

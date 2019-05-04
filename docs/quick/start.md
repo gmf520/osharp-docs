@@ -275,13 +275,13 @@ Liuliu.Blogs                                # 解决方案根目录
     第一个注册用户将自动拥有 **最高权限** 的 **超级管理员** 角色身份。
 
 注册界面：
-![注册界面](../assets/imgs/quick/start/005.png "注册界面"){.img-fluid tag=5}
+![注册界面](../assets/imgs/quick/start/005.png "注册界面"){.img-fluid tag=4}
 
 后台主页：
-![后台主页](../assets/imgs/quick/start/006.png "后台主页"){.img-fluid tag=6}
+![后台主页](../assets/imgs/quick/start/006.png "后台主页"){.img-fluid tag=4}
 
 功能管理：
-![功能管理](../assets/imgs/quick/start/007.png "功能管理"){.img-fluid tag=7}
+![功能管理](../assets/imgs/quick/start/007.png "功能管理"){.img-fluid tag=4}
 
 数据实体管理：
-![数据实体管理](../assets/imgs/quick/start/008.png "数据实体管理"){.img-fluid tag=8}
+![数据实体管理](../assets/imgs/quick/start/008.png "数据实体管理"){.img-fluid tag=4}
