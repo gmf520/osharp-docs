@@ -74,13 +74,13 @@ NodeJS 安装 好之后，NPM 也就可以用了。但 NPM 的默认安装源在
 
 #### Angular
 OSharp 的 [Angular](https://angular.cn) ![](https://img.shields.io/npm/v/@angular/core.svg) 版前端是基于 [NG-ALAIN](https://ng-alain.com) ![](https://img.shields.io/npm/v/ng-alain.svg) 前端框架开发的。NG-ALAIN 是一个基于 Antd 中后台前端解决方案，提供更多通用性业务模块，让开发者更加专注于业务。
-首先，需要通过 npm 命令全局安装 @@angular/cli ![](https://img.shields.io/npm/v/@angular/cli.svg) 运行环境
-> npm install -g @@angular/cli
+首先，需要通过 npm 命令全局安装 @angular/cli ![](https://img.shields.io/npm/v/@angular/cli.svg) 运行环境
+> npm install -g @angular/cli
 
 #### Vue
 OSharp 的 [Vue](https://cn.vuejs.org/index.html) ![](https://img.shields.io/npm/v/vue.svg) 版前端是基于 [IView](https://iviewui.com) ![](https://img.shields.io/npm/v/iview.svg) 前端框架开发的。IView 是一套基于 Vue.js 的高质量 UI 组件库。
-首先，需要通过 npm 命令全局安装 @@vue/cli ![](https://img.shields.io/npm/v/@vue/cli.svg) 运行环境
-> npm install -g @@vue/cli
+首先，需要通过 npm 命令全局安装 @vue/cli ![](https://img.shields.io/npm/v/@vue/cli.svg) 运行环境
+> npm install -g @vue/cli
 
 !!! attention
     由于精力有限及优先级的问题，Vue版本现在尚未开发完成。
@@ -99,7 +99,7 @@ OSharp 的 [Vue](https://cn.vuejs.org/index.html) ![](https://img.shields.io/npm
 执行后，将能看到 `osharp_xxx` 系列的命令已安装到 .NetCore CLI 列表中
 
 | Name                               | Command             | Language | Path           |
-| ---------------------------------- | ------------------- | -------- | -------------- |
+|------------------------------------|---------------------|----------|----------------|
 | OSharp Build Command File          | osharp              | [C#]     | Web/MVC/OSHARP |
 | OSharp Solution Project            | osharp_sln          | [C#]     | Web/MVC/OSHARP |
 | OSharp Service Core Project        | osharp_core         | [C#]     | Web/MVC/OSHARP |

@@ -75,49 +75,49 @@ public abstract class OsharpPack
 OSharp框架有一套推荐的模块文件夹布局方案，根据该方案，博客`Blogs`模块的 **后端文件夹** 结构推荐如下：
 
 ```
-src
-├─Liuliu.Blogs.Core
-│  └─Blogs
-│      ├─BlogsPack.cs
-│      ├─BlogsService.cs
-│      ├─BlogsService.Blog.cs
-│      ├─BlogsService.Post.cs
-│      ├─IBlogsContract.cs
-│      ├─Dtos
-│      │    ├─BlogInputDto.cs
-│      │    ├─BlogOutputDto.cs
-│      │    ├─PostInputDto.cs
-│      │    └─PostOutputDto.cs
-│      └─Entities
-│           ├─Blog.cs
-│           └─Post.cs
-├─Liuliu.Blogs.EntityConfiguration
-│  └─Blogs
-│      ├─BlogConfiguration.cs
-│      └─PostConfiguration.cs
-└─Liuliu.Blogs.Web
-    └─Areas
-       └─Admin
-            └─Controllers
-                └─Blogs
-                    ├─BlogController.cs
-                    └─PostController.cs
+src                                         # 源代码文件夹
+├─Liuliu.Blogs.Core                         # 项目核心工程
+│  └─Blogs                                  # 博客模块文件夹
+│      ├─BlogsPack.cs                       # 博客模块入口类
+│      ├─BlogsService.cs                    # 博客服务类
+│      ├─BlogsService.Blog.cs               # 博客模块-博客服务类
+│      ├─BlogsService.Post.cs               # 博客模块-文章服务类
+│      ├─IBlogsContract.cs                  # 博客模块服务接口
+│      ├─Dtos                               # 博客模块DTO文件夹
+│      │    ├─BlogInputDto.cs               # 博客输入DTO
+│      │    ├─BlogOutputDto.cs              # 博客输出DTO
+│      │    ├─PostInputDto.cs               # 文章输入DTO
+│      │    └─PostOutputDto.cs              # 文章输出DTO
+│      └─Entities                           # 博客模块实体类文件夹
+│           ├─Blog.cs                       # 博客实体类
+│           └─Post.cs                       # 文章实体类
+├─Liuliu.Blogs.EntityConfiguration          # 实体映射配置工程
+│  └─Blogs                                  # 博客模块文件夹
+│      ├─BlogConfiguration.cs               # 博客实体映射配置类
+│      └─PostConfiguration.cs               # 文章实体映射配置类
+└─Liuliu.Blogs.Web                          # 项目Web工程
+    └─Areas                                 # 区域文件夹
+       └─Admin                              # 管理区域文件夹
+            └─Controllers                   # 管理控制器文件夹
+                └─Blogs                     # 博客模块文件夹
+                    ├─BlogController.cs     # 博客管理控制器
+                    └─PostController.cs     # 文章管理控制器
 ```
 
 博客`Blogs`模块相应的 Angular **前端文件夹** 结构推荐如下：
 ```
-src
-└─app
-   └─routes
-       └─blogs
-           ├─blogs.module.ts
-           ├─blogs.routing.ts
-           ├─blog
-           │   ├─blog.component.html
-           │   └─blog.component.ts
-           └─post
-                ├─post.component.html
-                └─post.component.ts
+src                                         # 源代码文件夹
+└─app                                       # APP文件夹
+   └─routes                                 # 路由文件夹
+       └─blogs                              # 博客模块文件夹
+           ├─blogs.module.ts                # 博客模块文件
+           ├─blogs.routing.ts               # 博客模块路由文件
+           ├─blog                           # 博客组件文件夹
+           │   ├─blog.component.html        # 博客组件模板文件
+           │   └─blog.component.ts          # 博客组件文件
+           └─post                           # 文章组件文件夹
+                ├─post.component.html       # 文章组件模板文件
+                └─post.component.ts         # 文章组件文件
 ```
 
 ### 博客业务需求分析
@@ -140,57 +140,57 @@ OSharp的数据层，主要是 **数据实体** 的定义，只要数据实体�
 
 * 博客 - Blog
 
-    | 字段        | 数据类型 | 描述         | 备注         | InputDto | OutputDto |
-    | ----------- | -------- | ------------ | ------------ | -------- | --------- |
-    | Id          | int      | 博客编号     | 主键，唯一   | 是       | 是        |
-    | Url         | string   | 博客地址     | 唯一         | 是       | 是        |
-    | Display     | string   | 博客显示名称 |              | 是       | 是        |
-    | IsEnabled   | boolean  | 已开通       |              | 否       | 是        |
-    | CreatedTime | DateTime | 创建时间     |              | 否       | 是        |
-    | DeletedTime | DateTime | 逻辑删除时间 | 可空         | 否       | 否        |
-    | UserId      | int      | 博主编号     | 外键，一对一 | 否       | 是        |
+| 字段        | 数据类型 | 描述         | 备注        | InputDto | OutputDto |
+|-------------|----------|------------|-------------|----------|-----------|
+| Id          | int      | 博客编号     | 主键，唯一   | 是       | 是        |
+| Url         | string   | 博客地址     | 唯一        | 是       | 是        |
+| Display     | string   | 博客显示名称 |             | 是       | 是        |
+| IsEnabled   | boolean  | 已开通       |             | 否       | 是        |
+| CreatedTime | DateTime | 创建时间     |             | 否       | 是        |
+| DeletedTime | DateTime | 逻辑删除时间 | 可空        | 否       | 否        |
+| UserId      | int      | 博主编号     | 外键，一对一 | 否       | 是        |
 
 * 文章 - Post
 
-    | 字段        | 数据类型 | 描述         | 备注         | InputDto | OutputDto |
-    | ----------- | -------- | ------------ | ------------ | -------- | --------- |
-    | Id          | int      | 文章编号     | 主键，唯一   | 是       | 是        |
-    | Title       | string   | 文章标题     |              | 是       | 是        |
-    | Content     | string   | 文章内容     |              | 是       | 是        |
-    | CreatedTime | DateTime | 创建时间     |              | 否       | 是        |
-    | DeletedTime | DateTime | 逻辑删除时间 | 可空         | 否       | 否        |
-    | BlogId      | int      | 博客Id       | 外键，多对一 | 否       | 是        |
-    | UserId      | int      | 作者编号     | 外键，多对一 | 否       | 是        |
+| 字段        | 数据类型 | 描述         | 备注        | InputDto | OutputDto |
+|-------------|----------|------------|-------------|----------|-----------|
+| Id          | int      | 文章编号     | 主键，唯一   | 是       | 是        |
+| Title       | string   | 文章标题     |             | 是       | 是        |
+| Content     | string   | 文章内容     |             | 是       | 是        |
+| CreatedTime | DateTime | 创建时间     |             | 否       | 是        |
+| DeletedTime | DateTime | 逻辑删除时间 | 可空        | 否       | 否        |
+| BlogId      | int      | 博客Id       | 外键，多对一 | 否       | 是        |
+| UserId      | int      | 作者编号     | 外键，多对一 | 否       | 是        |
 
 ### 服务层
 服务层负责实现模块的业务处理，是整个系统的最核心部分，一个系统有什么功能，能对外提供什么样的服务，都是在服务层实现的。
 
-| 实体 | 业务操作                       |
-| ---- | ------------------------------ |
+| 实体 | 业务操作                    |
+|----|-------------------------|
 | 博客 | 申请开通、开通审核、更新、删除 |
-| 文章 | 新增、更新、删除               |
+| 文章 | 新增、更新、删除              |
 
 ### WebAPI层
 WebAPI层负责对外提供数据操作API，并对API进行授权约束。
 
 * 博客管理 - Blog
 
-    | 操作     | 访问类型 | 操作角色               |
-    | -------- | -------- | ---------------------- |
-    | 申请开通 | 登录访问 | 已登录未开通博客的用户 |
-    | 读取     | 角色访问 | 博客管理员、博主       |
-    | 开通审核 | 角色访问 | 博客管理员             |
-    | 更新     | 角色访问 | 博客管理员、博主       |
-    | 删除     | 角色访问 | 博客管理员             |
+| 操作     | 访问类型 | 操作角色               |
+|--------|------|--------------------|
+| 申请开通 | 登录访问 | 已登录未开通博客的用户 |
+| 读取     | 角色访问 | 博客管理员、博主        |
+| 开通审核 | 角色访问 | 博客管理员             |
+| 更新     | 角色访问 | 博客管理员、博主        |
+| 删除     | 角色访问 | 博客管理员             |
 
 * 文章管理 - Post
 
-    | 操作 | 访问类型 | 操作角色         |
-    | ---- | -------- | ---------------- |
-    | 读取 | 角色访问 | 博客管理员、博主 |
-    | 新增 | 角色访问 | 博主             |
-    | 更新 | 角色访问 | 博客管理员、博主 |
-    | 删除 | 角色访问 | 博客管理员、博主 |
+| 操作 | 访问类型 | 操作角色        |
+|----|------|---------------|
+| 读取 | 角色访问 | 博客管理员、博主 |
+| 新增 | 角色访问 | 博主            |
+| 更新 | 角色访问 | 博客管理员、博主 |
+| 删除 | 角色访问 | 博客管理员、博主 |
 
 ### 前端UI层
 前端UI层是整个系统的对外操作界面，是直面最终用户的终端，整个系统最终表现形式全靠前端展现出现。

@@ -78,7 +78,7 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.keys
   - pymdownx.magiclink:
-      repo_url_shorthand: true
+      repo_url_shorthand: false
       user: squidfunk
       repo: mkdocs-material
   - pymdownx.mark

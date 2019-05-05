@@ -10,6 +10,26 @@
 
 * 数据实体映射配置：CodeFirst的开发模式，数据库的设计细节完全靠代码来完成，数据实体映射配置正是负责这项工作的，针对一个实体，可以在这里配置其在数据库中的数据表关系、数据约束及各个数据字段的每一个细节配置。
 
+#### 数据层文件夹布局
+
+```
+src                                     # 源代码文件夹
+├─Liuliu.Blogs.Core                     # 项目核心工程
+│  └─Blogs                              # 博客模块文件夹
+│      ├─Dtos                           # 博客模块DTO文件夹
+│      │    ├─BlogInputDto.cs           # 博客输入DTO
+│      │    ├─BlogOutputDto.cs          # 博客输出DTO
+│      │    ├─PostInputDto.cs           # 文章输入DTO
+│      │    └─PostOutputDto.cs          # 文章输出DTO
+│      └─Entities                       # 博客模块实体类文件夹
+│           ├─Blog.cs                   # 博客实体类
+│           └─Post.cs                   # 文章实体类
+└─Liuliu.Blogs.EntityConfiguration      # 实体映射配置工程
+   └─Blogs                              # 博客模块文件夹
+       ├─BlogConfiguration.cs           # 博客实体映射配置类
+       └─PostConfiguration.cs           # 文章实体映射配置类
+```
+
 ## 实体类
 
 ### 必选接口
@@ -191,7 +211,7 @@ public interface ISoftDeletable
 
 ### 博客模块的实体类定义
 
-回到我们的 `Liuliu.Blogs` 项目，根据 [业务模块设计#模块文件夹结构布局](index.md#_3)给出的结构，在 `Liuliu.Blogs.Core` 项目中创建 `Blogs/Entities` 的文件夹存放实体类，添加如下实体类文件。
+回到我们的 `Liuliu.Blogs` 项目，根据 <[业务模块设计#模块文件夹结构布局](index.md#_3)> 给出的结构，在 `Liuliu.Blogs.Core` 项目中创建 `Blogs/Entities` 的文件夹存放实体类，添加如下实体类文件。
 
 #### 博客实体 - Blog
 ```C#
@@ -350,7 +370,7 @@ public interface IInputDto<TKey>
 
 ### 博客模块的输入输出DTO类定义
 
-回到我们的 `Liuliu.Blogs` 项目，根据 [业务模块设计#模块文件夹结构布局](index.md#_3)给出的结构，在 `Liuliu.Blogs.Core` 项目中创建 `Blogs/Dtos` 的文件夹存放实体类，添加如下输入输出DTO类文件。
+回到我们的 `Liuliu.Blogs` 项目，根据 <[业务模块设计#模块文件夹结构布局](index.md#_3)> 给出的结构，在 `Liuliu.Blogs.Core` 项目中创建 `Blogs/Dtos` 的文件夹存放实体类，添加如下输入输出DTO类文件。
 
 #### 博客 - Blog
 
@@ -601,11 +621,11 @@ public abstract class EntityTypeConfigurationBase<TEntity, TKey> : IEntityTypeCo
 
 ### 博客模块的实体映射配置类实现
 
-回到我们的 `Liuliu.Blogs` 项目，根据 [业务模块设计#模块文件夹结构布局](index.md#_3)给出的结构，在 `Liuliu.Blogs.EntityConfiguration` 项目中创建 `Blogs` 的文件夹存放实体类，添加如下实体映射配置类文件。
+回到我们的 `Liuliu.Blogs` 项目，根据 <[业务模块设计#模块文件夹结构布局](index.md#_3)> 给出的结构，在 `Liuliu.Blogs.EntityConfiguration` 项目中创建 `Blogs` 的文件夹存放实体类，添加如下实体映射配置类文件。
 
 
 #### 博客 - Blog
-根据 [业务模块设计#数据层](index.md#_5)的定义，博客实体的设计要求`Url`属性 **唯一索引**，并且 **博客与博主** 之间的关系是 **一对一**，因此做如下约束：
+根据 <[业务模块设计#数据层](index.md#_5)> 的定义，博客实体的设计要求`Url`属性 **唯一索引**，并且 **博客与博主** 之间的关系是 **一对一**，因此做如下约束：
 
 1. 创建`Url`属性的唯一索引，形式本应是`builder.HasIndex(m => m.Url)`，但博客实体引入了逻辑删除，因此唯一索引应加入逻辑删除属性`DeletedTime`
 2. 博客实体与用户实体之间以`UserId`为外键，建立一对一关系，并且对于一个博客来说，其拥有者是必须的，因此需要加上`IsRequired`约束，并禁止级联删除。
@@ -629,7 +649,7 @@ public class BlogConfiguration : EntityTypeConfigurationBase<Blog, int>
 ```
 
 #### 文章 - Post
-根据 [业务模块设计#数据层](index.md#_5)的定义，文章实体的设计要求 **文章与博客** 之间的关系是 **多对一**，**文章与作者** 之间的关系是 **多对一**，因此做如下约束：
+根据 <[业务模块设计#数据层](index.md#_5)> 的定义，文章实体的设计要求 **文章与博客** 之间的关系是 **多对一**，**文章与作者** 之间的关系是 **多对一**，因此做如下约束：
 
 1. 文章实体与博客实体之间以`BlogId`为外键，建立多对一关系，并且对于一篇文章来说，其所在博客是必须的，因此需要加上`IsRequired`约束，并禁止级联删除。
 2. 文章实体与用户实体之间以`UserId`为外键，建立多对一关系，并且对于一篇文章来说，其作者是必须的，因此需要加上`IsRequired`约束，并禁止级联删除。

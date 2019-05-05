@@ -1,2 +1,632 @@
 # 添加业务服务层
 ---
+## 概述
+一个模块的服务层，主要负责如下几个方面的工作：
+
+* 向 API层 提供各个实体的数据查询的 `IQueryable<T>` 类型的数据源
+* 接收 API层 传入的 `IInputDto` 参数，完成实体的 `新增`、`更新`、`删除` 等业务操作
+* 接收 API层 传入的参数，处理各种 `模块级别` 的综合业务
+* 处理完业务之后，将数据通过 数据仓储`IRepository` 更新到数据库
+* 向 `事件总线` 模块发布业务处理事件，触发订阅的业务事件
+* 向 API 层返回业务操作结果
+
+整个过程如下图所示：
+![服务层数据流](../../assets/imgs/quick/steps/service/001.png "服务层数据流"){.img-fluid tag=1}
+
+## 服务层代码布局
+
+### 服务层代码布局分析
+
+一个业务模块，是负责完成一系列功能的，这些功能相互之间具有密切的关联性，所以对于一个模块来说，业务服务是一个整体，不应把他们再按单个实体拆分开来。
+OSharp 的业务模块代码结构设计，也是根据这一原则来设计的。设计规则如下：
+
+* 服务接口`IBlogsContract`：一个模块的业务服务共享一个服务接口，接口中包含模块的综合业务服务，也包含模块的各个实体的查询数据集、新增、更新、删除等自有业务服务。
+* 服务实现`BlogsService`：服务实现使用 分部类`partial` 设计，例如本例中的博客模块业务，文件拆分如下：
+    * `BlogsService.cs`：博客模块服务实现类的主文件，负责各实体的仓储服务注入，辅助服务注入，`模块综合业务`实现
+    * `BlogsService.Blog.cs`：博客模块服务的`博客实体`服务实现类，负责博客实体的 `查询数据集、增改删` 业务实现
+    * `BlogsService.Post.cs`：博客模块服务的`文章实体`服务实现类，负责文章实体的 `查询数据集、增改删` 业务实现
+
+* 模块入口`BlogsPack`：定义模块的级别、启动顺序、执行服务添加、模块初始化等功能
+
+综上，服务层代码布局如下所示：
+
+
+```
+src                                 # 源代码文件夹
+└─Liuliu.Blogs.Core                 # 项目核心工程
+   └─Blogs                          # 博客模块文件夹
+       ├─BlogsPack.cs               # 博客模块入口类
+       ├─BlogsService.cs            # 博客服务类
+       ├─BlogsService.Blog.cs       # 博客模块-博客服务类
+       ├─BlogsService.Post.cs       # 博客模块-文章服务类
+       └─IBlogsContract.cs          # 博客模块服务接口
+```
+
+## 服务接口 `IBlogsContract`
+
+### 接口定义分析 
+
+#### 数据查询
+
+对于数据查询，业务层只向 API 层开放一个 `IQueryable<TEntity>` 的查询数据集。原则上，服务层不实现 `纯数据查询`（例如 用于列表分页数据、下拉菜单选项 等数据，不涉及数据变更的查询操作） 的服务，所有的 `纯数据查询` 都在 API层 按需要进行查询。具体分析请看 [>>数据查询应该在哪做>>](https://www.cnblogs.com/guomingfeng/p/mvc-ef-query.html#autoid-2-0-0)
+
+额外的，`根据一定条件判断一个数据是否存在` 这种需求经常会用到（例如在新增或修改一个要求唯一的字符串时，需要异步检查输入的字符串是否已存在），因此设计一个 检查实体是否存在`CheckEntityExists` 的服务很有必要。
+
+!!!node
+    对于新增、更新、删除操作，除非很确定一次只操作一条记录除外，为了支持可能的批量操作，设计上都应把服务层的 增改删 操作设计为数组型参数的批量操作，同时使用 `params` 关键字使操作支持单个数据操作。
+
+#### 数据变更
+
+对于每一个实体，服务层按 `业务需求分析` 的要求定义必要的 `新增、更新、删除` 等操作，OSharp框架定义了一个 业务操作结果信息类 [OperationResult](https://docs.osharp.org/api/OSharp.Data.OperationResult.html) 来封装业务操作结果，这个结果可以返回 操作结果类型（`成功/错误/未变化/不存在/验证失败`）、返回消息、返回附加数据 等丰富的信息，API层 接受操作结果后可进行相应的处理。
+
+### 博客模块的接口定义
+回到我们的 `Liuliu.Blogs` 项目，根据 <[业务模块设计#服务层](index.md#_6)> 的需求分析，我们需要给 博客`Blog` 实体定义 `申请开通、开通审核、更新、删除` 服务，给 文章`Post` 实体类定义 `新增、更新、删除` 服务。
+
+接口定义如下：
+```C#
+
+/// <summary>
+/// 业务契约接口：博客模块
+/// </summary>
+public interface IBlogsContract
+{
+    #region 博客信息业务
+
+    /// <summary>
+    /// 获取 博客信息查询数据集
+    /// </summary>
+    IQueryable<Blog> Blogs { get; }
+
+    /// <summary>
+    /// 检查博客信息是否存在
+    /// </summary>
+    /// <param name="predicate">检查谓语表达式</param>
+    /// <param name="id">更新的博客信息编号</param>
+    /// <returns>博客信息是否存在</returns>
+    Task<bool> CheckBlogExists(Expression<Func<Blog, bool>> predicate, int id = 0);
+
+    /// <summary>
+    /// 申请博客信息
+    /// </summary>
+    /// <param name="dto">申请博客信息DTO信息</param>
+    /// <returns>业务操作结果</returns>
+    Task<OperationResult> ApplyForBlog(BlogInputDto dto);
+
+    /// <summary>
+    /// 审核博客信息
+    /// </summary>
+    /// <param name="id">博客编号</param>
+    /// <param name="isEnabled">是否通过</param>
+    /// <returns>业务操作结果</returns>
+    Task<OperationResult> VerifyBlog(int id, bool isEnabled);
+
+    /// <summary>
+    /// 更新博客信息
+    /// </summary>
+    /// <param name="dtos">包含更新信息的博客信息DTO信息</param>
+    /// <returns>业务操作结果</returns>
+    Task<OperationResult> UpdateBlogs(params BlogInputDto[] dtos);
+
+    /// <summary>
+    /// 删除博客信息
+    /// </summary>
+    /// <param name="ids">要删除的博客信息编号</param>
+    /// <returns>业务操作结果</returns>
+    Task<OperationResult> DeleteBlogs(params int[] ids);
+
+    #endregion
+
+    #region 文章信息业务
+
+    /// <summary>
+    /// 获取 文章信息查询数据集
+    /// </summary>
+    IQueryable<Post> Posts { get; }
+
+    /// <summary>
+    /// 检查文章信息是否存在
+    /// </summary>
+    /// <param name="predicate">检查谓语表达式</param>
+    /// <param name="id">更新的文章信息编号</param>
+    /// <returns>文章信息是否存在</returns>
+    Task<bool> CheckPostExists(Expression<Func<Post, bool>> predicate, int id = 0);
+
+    /// <summary>
+    /// 添加文章信息
+    /// </summary>
+    /// <param name="dtos">要添加的文章信息DTO信息</param>
+    /// <returns>业务操作结果</returns>
+    Task<OperationResult> CreatePosts(params PostInputDto[] dtos);
+
+    /// <summary>
+    /// 更新文章信息
+    /// </summary>
+    /// <param name="dtos">包含更新信息的文章信息DTO信息</param>
+    /// <returns>业务操作结果</returns>
+    Task<OperationResult> UpdatePosts(params PostInputDto[] dtos);
+
+    /// <summary>
+    /// 删除文章信息
+    /// </summary>
+    /// <param name="ids">要删除的文章信息编号</param>
+    /// <returns>业务操作结果</returns>
+    Task<OperationResult> DeletePosts(params int[] ids);
+
+    #endregion
+}
+
+```
+
+## 服务实现 `BlogsService`
+
+### 依赖服务注入方式分析
+
+服务层的业务实现，通过向服务实现类注入 数据仓储`IRepository<TEntity, TKey>` 对象来获得向数据库存取数据的能力。根据 .NetCore 的依赖注入使用原则，常规的做法是在服务实现类的 `构造函数` 进行依赖服务的注入。形如：
+
+```C#
+
+/// <summary>
+/// 业务服务实现：博客模块
+/// </summary>
+public class BlogsService : IBlogsContract
+{
+    private readonly IRepository<Blog, int> _blogRepository;
+    private readonly IRepository<Post, int> _postRepository;
+    private readonly IRepository<User, int> _userRepository;
+
+    /// <summary>
+    /// 初始化一个<see cref="BlogsService"/>类型的新实例
+    /// </summary>
+    public BlogsService(IRepository<Blog, int> blogRepository,
+        IRepository<Post, int> postRepository,
+        IRepository<User, int> userRepository)
+    {
+        _blogRepository = blogRepository;
+        _postRepository = postRepository;
+        _userRepository = userRepository;
+    }
+}
+
+```
+#### 构造函数注入带来的性能影响
+
+每个仓储都使用构造函数注入的话，如果模块的业务比较复杂，涉及的实体比较多（比如十几个实体是很经常的事），就会造成每次实例化 `BlogsService` 类的实例的时候，都需要去实例化很多个依赖服务，而实际上 **一次业务执行只执行服务中的某个方法，可能也就用到其中的一两个依赖服务**，这就造成了很多不必要的额外工作，也就是性能损耗。
+
+#### 依赖服务注入的性能优化
+
+如果 **不考虑业务服务的可测试性**（单元测试通常需要Mock依赖服务）的话，在构造函数中只注入 `IServiceProvider` 实例，然后在业务代码中使用 `serviceProvider.GetService<T>()` 的方式来 **按需获取** 依赖服务的实例，是比较经济的方式。则服务实现变为如下所示：
+
+```C#
+/// <summary>
+/// 业务服务实现：博客模块
+/// </summary>
+public class BlogsService : IBlogsContract
+{
+    private readonly IServiceProvider _serviceProvider;
+
+    /// <summary>
+    /// 初始化一个<see cref="BlogsService"/>类型的新实例
+    /// </summary>
+    public BlogsService(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
+    /// <summary>
+    /// 获取 博客仓储对象
+    /// </summary>
+    protected IRepository<Blog, int> BlogRepository => _serviceProvider.GetService<IRepository<Blog, int>>();
+
+    /// <summary>
+    /// 获取 文章仓储对象
+    /// </summary>
+    protected IRepository<Post, int> PostRepository => _serviceProvider.GetService<IRepository<Post, int>>();
+
+    /// <summary>
+    /// 获取 用户仓储对象
+    /// </summary>
+    protected IRepository<User, int> UserRepository => _serviceProvider.GetService<IRepository<User, int>>();
+}
+```
+
+各个依赖服务改为属性的存在方式，并且可访问性为 `protected`，这就保证了依赖服务的安全性。依赖服务使用 `serviceProvider.GetService<T>()` 的方式创建实例，可以做到 **按需创建**，达到性能优化的目的。
+
+### 增改删操作的简化
+
+#### 常规批量操作的弊端
+
+直接通过 数据仓储`IRepository<TEntity, TKey>` 实现数据的增改删的批量操作，总免不了要使用循环来遍历传进来的多个InputDto，例如文章的更新操作，以下几个步骤是免不了的：
+
+1. 由 `dto.Id` 查找出相应的文章实体 `entity`，如果不存在，中止操作并返回
+2. 进行更新前的数据检查
+    1. 检查 dto 的合法性，比如文章标题要求唯一，dto.Title 就要验证唯一性，中止操作并返回
+    2. 检查 entity 的合法性，比如文章已锁定，就不允许编辑，要进行拦截，检查不通过，中止操作并返回
+3. 使用 `AutoMapper` 将 `dto` 的值更新到 `entity`
+4. 进行其他关联实体的更新
+    1. 比如添加文章的编辑记录
+    2. 比如给当前操作人加积分
+5. 将 `entity` 的更新提交到数据库
+
+整个过程实现代码如下：
+
+```C#
+/// <summary>
+/// 更新文章信息
+/// </summary>
+/// <param name="dtos">包含更新信息的文章信息DTO信息</param>
+/// <returns>业务操作结果</returns>
+public virtual async Task<OperationResult> UpdatePosts(params PostInputDto[] dtos)
+{
+    Check.Validate<PostInputDto, int>(dtos, nameof(dtos));
+
+    int count = 0;
+    foreach (PostInputDto dto in dtos)
+    {
+        Post entity = await PostRepository.GetAsync(dto.Id);
+        if (entity == null)
+        {
+            return new OperationResult(OperationResultType.QueryNull, $"编号为{dto.Id}的文章信息无法找到");
+        }
+
+        // todo:
+        // 在这里要检查 dto 的合法性，比如文章标题要求唯一，dto.Title 就要验证唯一性
+        // 在这里要检查 entity 的合法性，比如文章已锁定，就不允许编辑，要进行拦截
+
+        entity = dto.MapTo(entity);
+
+        // todo:
+        // 在这里要进行其他实体的关联更新，比如添加文章的编辑记录
+
+        count += await PostRepository.UpdateAsync(entity);
+    }
+
+    if (count > 0)
+    {
+        return new OperationResult(OperationResultType.Success, $"{dtos.Length}个文章信息更新成功");
+    }
+    return OperationResult.NoChanged;
+}
+
+```
+
+#### 批量操作改进
+
+这是个重复性很大的繁琐工作，整个流程中只有第2步和第4步是变化的，其余步骤都相对固定。为了简化这类操作，我们可以将第2、4步骤变化点封装起来，使用 `委托` 将操作内容作为参数传进来。
+OSharp在 数据仓储`IRepository<TEntity, TKey>` 中定义了关于这类 `IInputDto` 类型参数的实体批量操作API。
+
+例如批量更新，实现如下：
+```C# hl_lines="23 24 25 26 28 29 30 31"
+/// <summary>
+/// 异步以DTO为载体批量更新实体
+/// </summary>
+/// <typeparam name="TEditDto">更新DTO类型</typeparam>
+/// <param name="dtos">更新DTO信息集合</param>
+/// <param name="checkAction">更新信息合法性检查委托</param>
+/// <param name="updateFunc">由DTO到实体的转换委托</param>
+/// <returns>业务操作结果</returns>
+public virtual async Task<OperationResult> UpdateAsync<TEditDto>(ICollection<TEditDto> dtos,
+    Func<TEditDto, TEntity, Task> checkAction = null,
+    Func<TEditDto, TEntity, Task<TEntity>> updateFunc = null) where TEditDto : IInputDto<TKey>
+{
+    List<string> names = new List<string>();
+    foreach (TEditDto dto in dtos)
+    {
+        try
+        {
+            TEntity entity = await _dbSet.FindAsync(dto.Id);
+            if (entity == null)
+            {
+                return new OperationResult(OperationResultType.QueryNull);
+            }
+            if (checkAction != null)
+            {
+                await checkAction(dto, entity);
+            }
+            entity = dto.MapTo(entity);
+            if (updateFunc != null)
+            {
+                entity = await updateFunc(dto, entity);
+            }
+            entity = CheckUpdate(entity)[0];
+            _dbContext.Update<TEntity, TKey>(entity);
+        }
+        catch (OsharpException e)
+        {
+            return new OperationResult(OperationResultType.Error, e.Message);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, e.Message);
+            return new OperationResult(OperationResultType.Error, e.Message);
+        }
+        names.AddIfNotNull(GetNameValue(dto));
+    }
+    int count = await _dbContext.SaveChangesAsync(_cancellationTokenProvider.Token);
+    return count > 0
+        ? new OperationResult(OperationResultType.Success,
+            names.Count > 0
+                ? "信息“{0}”更新成功".FormatWith(names.ExpandAndToString())
+                : "{0}个信息更新成功".FormatWith(dtos.Count))
+        : new OperationResult(OperationResultType.NoChanged);
+}
+```
+如上高亮代码，此方法定义了 `Func<TEditDto, TEntity, Task> checkAction` 和 `Func<TEditDto, TEntity, Task<TEntity>> updateFunc` 两个委托参数作为 `更新前参数检查` 和 `更新后关联更新` 的操作传入方式，方法中是以 `OsharpException` 类型异常来作为中止信号的，如果需要在委托中中止操作，直接抛 `OsharpException` 异常即可。在调用时，即可极大简化批量更新的操作，如上的更新代码，简化如下：
+```C#
+/// <summary>
+/// 更新文章信息
+/// </summary>
+/// <param name="dtos">包含更新信息的文章信息DTO信息</param>
+/// <returns>业务操作结果</returns>
+public virtual async Task<OperationResult> UpdatePosts(params PostInputDto[] dtos)
+{
+    Check.Validate<PostInputDto, int>(dtos, nameof(dtos));
+
+    return await PostRepository.UpdateAsync(dtos, async (dto, entity) =>
+        {
+            // todo:
+            // 在这里要检查 dto 的合法性，比如文章标题要求唯一，dto.Title 就要验证唯一性
+            // 在这里要检查 entity 的合法性，比如文章已锁定，就不允许编辑，要进行拦截
+        },
+        async (dto, entity) =>
+        {
+            // todo:
+            // 在这里要进行其他实体的关联更新，比如添加文章的编辑记录
+
+            return entity;
+        });
+}
+```
+
+如果没有必要做额外的 更新前检查 和更新后的 关联更新，上面的批量更新可以简化到极致：
+```C#
+/// <summary>
+/// 更新文章信息
+/// </summary>
+/// <param name="dtos">包含更新信息的文章信息DTO信息</param>
+/// <returns>业务操作结果</returns>
+public virtual async Task<OperationResult> UpdatePosts(params PostInputDto[] dtos)
+{
+    Check.Validate<PostInputDto, int>(dtos, nameof(dtos));
+
+    return await PostRepository.UpdateAsync(dtos);
+}
+```
+
+### 博客模块的服务实现
+回到我们的 `Liuliu.Blogs` 项目，根据 <[业务模块设计#服务层](index.md#_6)> 的需求分析，综合使用OSharp框架提供的基础建设，博客模块的业务服务实现如下：
+
+#### BlogsService.cs
+```C#
+/// <summary>
+/// 业务服务实现：博客模块
+/// </summary>
+public partial class BlogsService : IBlogsContract
+{
+    private readonly IServiceProvider _serviceProvider;
+
+    /// <summary>
+    /// 初始化一个<see cref="BlogsService"/>类型的新实例
+    /// </summary>
+    public BlogsService(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
+    /// <summary>
+    /// 获取 博客仓储对象
+    /// </summary>
+    protected IRepository<Blog, int> BlogRepository => _serviceProvider.GetService<IRepository<Blog, int>>();
+
+    /// <summary>
+    /// 获取 文章仓储对象
+    /// </summary>
+    protected IRepository<Post, int> PostRepository => _serviceProvider.GetService<IRepository<Post, int>>();
+
+    /// <summary>
+    /// 获取 用户仓储对象
+    /// </summary>
+    protected IRepository<User, int> UserRepository => _serviceProvider.GetService<IRepository<User, int>>();
+}
+```
+
+#### BlogsService.Blog.cs
+``` C#
+public partial class BlogsService
+{
+    /// <summary>
+    /// 获取 博客信息查询数据集
+    /// </summary>
+    public virtual IQueryable<Blog> Blogs => BlogRepository.Query();
+
+    /// <summary>
+    /// 检查博客信息是否存在
+    /// </summary>
+    /// <param name="predicate">检查谓语表达式</param>
+    /// <param name="id">更新的博客信息编号</param>
+    /// <returns>博客信息是否存在</returns>
+    public virtual Task<bool> CheckBlogExists(Expression<Func<Blog, bool>> predicate, int id = 0)
+    {
+        Check.NotNull(predicate, nameof(predicate));
+        return BlogRepository.CheckExistsAsync(predicate, id);
+    }
+
+    /// <summary>
+    /// 申请博客信息
+    /// </summary>
+    /// <param name="dto">申请博客信息DTO信息</param>
+    /// <returns>业务操作结果</returns>
+    public virtual async Task<OperationResult> ApplyForBlog(BlogInputDto dto)
+    {
+        Check.Validate(dto, nameof(dto));
+
+        // 博客是以当前用户的身份来申请的
+        ClaimsPrincipal principal = _serviceProvider.GetCurrentUser();
+        if (principal == null || !principal.Identity.IsAuthenticated)
+        {
+            return new OperationResult(OperationResultType.Error, "用户未登录或登录已失效");
+        }
+
+        int userId = principal.Identity.GetUserId<int>();
+        User user = await UserRepository.GetAsync(userId);
+        if (user == null)
+        {
+            return new OperationResult(OperationResultType.QueryNull, $"编号为“{userId}”的用户信息不存在");
+        }
+        Blog blog = BlogRepository.TrackQuery(m => m.UserId == userId).FirstOrDefault();
+        if (blog != null)
+        {
+            return new OperationResult(OperationResultType.Error, "当前用户已开通博客，不能重复申请");
+        }
+
+        if (await CheckBlogExists(m => m.Url == dto.Url))
+        {
+            return new OperationResult(OperationResultType.Error, $"Url 为“{dto.Url}”的博客已存在，不能重复添加");
+        }
+        blog = dto.MapTo<Blog>();
+        blog.UserId = userId;
+        int count = await BlogRepository.InsertAsync(blog);
+        return count > 0
+            ? new OperationResult(OperationResultType.Success, "博客申请成功")
+            : OperationResult.NoChanged;
+    }
+
+    /// <summary>
+    /// 审核博客信息
+    /// </summary>
+    /// <param name="id">博客编号</param>
+    /// <param name="isEnabled">是否通过</param>
+    /// <returns>业务操作结果</returns>
+    public virtual async Task<OperationResult> VerifyBlog(int id, bool isEnabled)
+    {
+        Blog blog = await BlogRepository.GetAsync(id);
+        if (blog == null)
+        {
+            return new OperationResult(OperationResultType.QueryNull, $"编号为“{id}”的博客信息不存在");
+        }
+
+        blog.IsEnabled = isEnabled;
+        int count = await BlogRepository.UpdateAsync(blog);
+        return count > 0
+            ? new OperationResult(OperationResultType.Success, $"博客“{blog.Display}”审核 {(isEnabled ? "通过" : "未通过")}")
+            : OperationResult.NoChanged;
+    }
+
+    /// <summary>
+    /// 更新博客信息
+    /// </summary>
+    /// <param name="dtos">包含更新信息的博客信息DTO信息</param>
+    /// <returns>业务操作结果</returns>
+    public virtual Task<OperationResult> UpdateBlogs(params BlogInputDto[] dtos)
+    {
+        return BlogRepository.UpdateAsync(dtos, async (dto, entity) =>
+        {
+            if (await BlogRepository.CheckExistsAsync(m => m.Url == dto.Url, dto.Id))
+            {
+                throw new OsharpException($"Url为“{dto.Url}”的博客已存在，不能重复");
+            }
+        });
+    }
+
+    /// <summary>
+    /// 删除博客信息
+    /// </summary>
+    /// <param name="ids">要删除的博客信息编号</param>
+    /// <returns>业务操作结果</returns>
+    public virtual Task<OperationResult> DeleteBlogs(params int[] ids)
+    {
+        return BlogRepository.DeleteAsync(ids, entity =>
+        {
+            if (PostRepository.Query(m => m.BlogId == entity.Id).Any())
+            {
+                throw new OsharpException($"博客“{entity.Display}”中还有文章未删除，请先删除所有文章，再删除博客");
+            }
+            return Task.FromResult(0);
+        });
+    }
+}
+```
+
+#### BlogsService.Post.cs
+```C#
+public partial class BlogsService
+{
+    /// <summary>
+    /// 获取 文章信息查询数据集
+    /// </summary>
+    public virtual IQueryable<Post> Posts => PostRepository.Query();
+
+    /// <summary>
+    /// 检查文章信息是否存在
+    /// </summary>
+    /// <param name="predicate">检查谓语表达式</param>
+    /// <param name="id">更新的文章信息编号</param>
+    /// <returns>文章信息是否存在</returns>
+    public virtual Task<bool> CheckPostExists(Expression<Func<Post, bool>> predicate, int id = 0)
+    {
+        Check.NotNull(predicate, nameof(predicate));
+        return PostRepository.CheckExistsAsync(predicate, id);
+    }
+
+    /// <summary>
+    /// 添加文章信息
+    /// </summary>
+    /// <param name="dtos">要添加的文章信息DTO信息</param>
+    /// <returns>业务操作结果</returns>
+    public virtual async Task<OperationResult> CreatePosts(params PostInputDto[] dtos)
+    {
+        Check.Validate<PostInputDto, int>(dtos, nameof(dtos));
+        if (dtos.Length == 0)
+        {
+            return OperationResult.NoChanged;
+        }
+
+        // 文章是以当前用户身份来添加的
+        ClaimsPrincipal principal = _serviceProvider.GetCurrentUser();
+        if (principal == null || !principal.Identity.IsAuthenticated)
+        {
+            throw new OsharpException("用户未登录或登录已失效");
+        }
+        // 检查当前用户的博客状态
+        int userId = principal.Identity.GetUserId<int>();
+        Blog blog = BlogRepository.TrackQuery(m => m.UserId == userId).FirstOrDefault();
+        if (blog == null || !blog.IsEnabled)
+        {
+            throw new OsharpException("当前用户的博客未开通，无法添加文章");
+        }
+
+        // 没有前置检查，checkAction为null
+        return await PostRepository.InsertAsync(dtos, null, (dto, entity) =>
+        {
+            // 给新建的文章关联博客和作者
+            entity.BlogId = blog.Id;
+            entity.UserId = userId;
+            return Task.FromResult(entity);
+        });
+    }
+
+    /// <summary>
+    /// 更新文章信息
+    /// </summary>
+    /// <param name="dtos">包含更新信息的文章信息DTO信息</param>
+    /// <returns>业务操作结果</returns>
+    public virtual Task<OperationResult> UpdatePosts(params PostInputDto[] dtos)
+    {
+        Check.Validate<PostInputDto, int>(dtos, nameof(dtos));
+
+        return PostRepository.UpdateAsync(dtos);
+    }
+
+    /// <summary>
+    /// 删除文章信息
+    /// </summary>
+    /// <param name="ids">要删除的文章信息编号</param>
+    /// <returns>业务操作结果</returns>
+    public virtual Task<OperationResult> DeletePosts(params int[] ids)
+    {
+        Check.NotNull(ids, nameof(ids));
+        return PostRepository.DeleteAsync(ids);
+    }
+}
+```
+
+## 模块入口 `BlogsPack`
