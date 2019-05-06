@@ -392,6 +392,51 @@ public virtual async Task<OperationResult> UpdatePosts(params PostInputDto[] dto
 }
 ```
 
+### 服务层的事务管理
+
+#### 事务开启与重用
+OSharp的数据层在一次业务处理请求中遇到数据的 `新增、更新、删除` 操作并第一次执行 `SaveChanges` 操作时，会自动开启手动事务，以后再次执行 `SaveChanges` 操作时，会直接使用 **同一连接对象** 的现有事务，以保证一次业务请求的操作都自在一个事务内。
+``` C# hl_lines="6"
+public override int SaveChanges()
+{
+    // ...
+
+    //开启或使用现有事务
+    BeginOrUseTransaction();
+
+    int count = base.SaveChanges();
+    
+    // ...
+
+    return count;
+}
+```
+#### 事务提交
+
+为了方便事务管理和不同的服务层之间的事务同步，OSharp框架默认的事务提交是在 API 层通过 MVC 的 `[UnitOfWorkAttribute](https://docs.osharp.org/api/OSharp.AspNetCore.Mvc.Filters.UnitOfWorkAttribute.html)` 特性来提交的。
+
+```C# hl_lines="7"
+/// <summary>
+/// 新用户注册
+/// </summary>
+/// <param name="dto">注册信息</param>
+/// <returns>JSON操作结果</returns>
+[HttpPost]
+[ServiceFilter(typeof(UnitOfWorkAttribute))]
+[ModuleInfo]
+[Description("用户注册")]
+public async Task<AjaxResult> Register(RegisterDto dto)
+{
+    // ...
+}
+```
+
+当然，你也可以不在 API 层标注 `[UnitOfWorkAttribute]`，而是在需要的时候通过 `IUnitOfWork.Commit()` 手动提交事务
+```C#
+IUnitOfWork unitOfWork = HttpContext.RequestServices.GetUnitOfWork<User, int>();
+unitOfWork.Commit();
+```
+
 ### 博客模块的服务实现
 回到我们的 `Liuliu.Blogs` 项目，根据 <[业务模块设计#服务层](index.md#_6)> 的需求分析，综合使用OSharp框架提供的基础建设，博客模块的业务服务实现如下：
 
@@ -627,6 +672,154 @@ public partial class BlogsService
         return PostRepository.DeleteAsync(ids);
     }
 }
+
 ```
 
 ## 模块入口 `BlogsPack`
+
+### 模块入口基类
+
+#### 非AspNetCore模块基类 OsharpPack
+
+前面多次提到，每个Pack模块都是继承自一个 模块基类`OsharpPack`，这个基类用于定义 模块初始化`UsePack` 过程中未涉及 `AspNetCore` 环境的模块。
+```C#
+/// <summary>
+    /// OSharp模块基类
+    /// </summary>
+    public abstract class OsharpPack
+    {
+        /// <summary>
+        /// 获取 模块级别，级别越小越先启动
+        /// </summary>
+        public virtual PackLevel Level => PackLevel.Business;
+
+        /// <summary>
+        /// 获取 模块启动顺序，模块启动的顺序先按级别启动，同一级别内部再按此顺序启动，
+        /// 级别默认为0，表示无依赖，需要在同级别有依赖顺序的时候，再重写为>0的顺序值
+        /// </summary>
+        public virtual int Order => 0;
+
+        /// <summary>
+        /// 获取 是否已可用
+        /// </summary>
+        public bool IsEnabled { get; protected set; }
+
+        /// <summary>
+        /// 将模块服务添加到依赖注入服务容器中
+        /// </summary>
+        /// <param name="services">依赖注入服务容器</param>
+        /// <returns></returns>
+        public virtual IServiceCollection AddServices(IServiceCollection services)
+        {
+            return services;
+        }
+
+        /// <summary>
+        /// 应用模块服务
+        /// </summary>
+        /// <param name="provider">服务提供者</param>
+        public virtual void UsePack(IServiceProvider provider)
+        {
+            IsEnabled = true;
+        }
+
+        /// <summary>
+        /// 获取当前模块的依赖模块类型
+        /// </summary>
+        /// <returns></returns>
+        internal Type[] GetDependPackTypes(Type packType = null)
+        {
+            // ...
+        }
+    }
+```
+
+模块基类`OsharpPack` 定义了两个可重写属性：
+
+* `PackLevel`：模块级别，级别越小越先启动
+模块级别按 模块 在框架中不同的功能层次，定义了如下几个级别：
+```C#
+/// <summary>
+/// 模块级别，级别越核心，优先启动
+/// </summary>
+public enum PackLevel
+{
+    /// <summary>
+    /// 核心级别，表示系统的核心模块，
+    /// 这些模块不涉及第三方组件，在系统运行中是不可替换的，核心模块将始终加载
+    /// </summary>
+    Core = 1,
+    /// <summary>
+    /// 框架级别，表示涉及第三方组件的基础模块
+    /// </summary>
+    Framework = 10,
+    /// <summary>
+    /// 应用级别，表示涉及应用数据的基础模块
+    /// </summary>
+    Application = 20,
+    /// <summary>
+    /// 业务级别，表示涉及真实业务处理的模块
+    /// </summary>
+    Business = 30
+}
+```
+* `Order`：级别内模块启动顺序，模块启动的顺序先按级别启动，同一级别内部再按此顺序启动，级别默认为 0，表示无依赖，需要在同级别有依赖顺序的时候，再重写为 >0 的顺序值
+
+同时，模块基类 还定义了两个方法：
+
+* `AddServices`：用于将模块内定义的服务注入到 **依赖注入服务容器** 中。
+* `UsePack`：用于使用服务对当前模块进行初始化。
+
+#### AspNetCore模块基类 AspOsharpPack
+
+`AspOsharpPack` 基类继承了 `OsharpPack`，添加了一个对 `IApplicationBuilder` 支持的 `UsePack` 方法，用于实现与 `AspNetCore` 关联的模块初始化工作，例如 Mvc模块 初始化的时候需要应用中间件：`app.UseMvcWithAreaRoute();`
+
+```C#
+/// <summary>
+///  基于AspNetCore环境的Pack模块基类
+/// </summary>
+public abstract class AspOsharpPack : OsharpPack
+{
+    /// <summary>
+    /// 应用AspNetCore的服务业务
+    /// </summary>
+    /// <param name="app">Asp应用程序构建器</param>
+    public virtual void UsePack(IApplicationBuilder app)
+    {
+        base.UsePack(app.ApplicationServices);
+    }
+}
+```
+
+### 博客模块的模块入口实现
+回到我们的 `Liuliu.Blogs` 项目，我们来实现投票模块的模块入口类 `BlogsPack`：
+
+* 博客模块属于业务模块，因此 `PackLevel` 设置为 `Business`
+* 博客模块的启动顺序无需重写，保持 0 即可
+* 将 博客业务服务 注册到 服务容器中
+* 无甚初始化业务
+
+实现代码如下：
+```C#
+/// <summary>
+/// 博客模块
+/// </summary>
+public class BlogsPack : OsharpPack
+{
+    /// <summary>
+    /// 获取 模块级别，级别越小越先启动
+    /// </summary>
+    public override PackLevel Level { get; } = PackLevel.Business;
+
+    /// <summary>将模块服务添加到依赖注入服务容器中</summary>
+    /// <param name="services">依赖注入服务容器</param>
+    /// <returns></returns>
+    public override IServiceCollection AddServices(IServiceCollection services)
+    {
+        services.TryAddScoped<IBlogsContract, BlogsService>();
+
+        return services;
+    }
+}
+```
+至此，博客模块的服务层实现完毕。

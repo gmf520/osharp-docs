@@ -170,7 +170,7 @@ services.TryAdd(new ServiceDescriptor(typeof(XXXService),
 * 系统初始化时，通过反射检索程序集的方式，检索出各个实体与上下文的映射关系，向上下文中动态添加实体类来构建上下文类型，以达到上下文类型与业务实体解耦的目的。通过统一基类EntityTypeConfigurationBase<TEntity, TKey>的FluentAPI实体映射，自由配置每个实体与数据库映射的每一个细节。
 
 ### 4. 基于AspNetCore的Identity的身份认证设计系统
-* 使用AspNetCore原生的用户身份认证框架，身份认证相关操作统一使用UserManager<TUser>，RoleMamanger<TRole>两个入口，保持了原生Identity的体系强大性与功能完整性。
+* 使用AspNetCore原生的用户身份认证框架，身份认证相关操作统一使用UserManager<TUser>，RoleManager<TRole>两个入口，保持了原生Identity的体系强大性与功能完整性。
 * 重新设计了用户存储[UserStore](https://docs.osharp.org/api/OSharp.Identity.UserStoreBase-8.html)和角色存储[RoleStore](https://docs.osharp.org/api/OSharp.Identity.RoleStoreBase-3.html)，使用框架内设计的IRepository<TEntity,TKey>数据仓储接口来实现对数据的仓储操作，使Identity身份认证系统与框架完美结合，避免了使用官方的Microsoft.AspNetCore.Identity.EntityFrameworkCore造成多个上下文或者被强制使用Identity上下文作为系统数据上下文来实现业务造成的尴尬。
 
 ### 5. 设计了一个强大的功能权限与数据权限的授权体系

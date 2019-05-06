@@ -99,7 +99,7 @@ OSharp 的 [Vue](https://cn.vuejs.org/index.html) ![](https://img.shields.io/npm
 执行后，将能看到 `osharp_xxx` 系列的命令已安装到 .NetCore CLI 列表中
 
 | Name                               | Command             | Language | Path           |
-|------------------------------------|---------------------|----------|----------------|
+| ---------------------------------- | ------------------- | -------- | -------------- |
 | OSharp Build Command File          | osharp              | [C#]     | Web/MVC/OSHARP |
 | OSharp Solution Project            | osharp_sln          | [C#]     | Web/MVC/OSHARP |
 | OSharp Service Core Project        | osharp_core         | [C#]     | Web/MVC/OSHARP |
@@ -247,7 +247,7 @@ Liuliu.Blogs                                # 解决方案根目录
     └── └── style.less                              # 样式引导入口
     ```
 
-按 `Ctrl+Tab` 快捷键，调出 VS Code 的命令行控制台，输入 NodeJS 包安装命令：
+按 `Ctrl + ~` 快捷键，调出 VS Code 的命令行控制台，输入 NodeJS 包安装命令：
 
 > npm install
 
