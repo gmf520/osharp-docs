@@ -10,6 +10,8 @@
 
 * 数据实体映射配置：CodeFirst的开发模式，数据库的设计细节完全靠代码来完成，数据实体映射配置正是负责这项工作的，针对一个实体，可以在这里配置其在数据库中的数据表关系、数据约束及各个数据字段的每一个细节配置。
 
+* 对象Mapper映射：数据传输对象`DTO` 与 实体类`Entity` 之间的转换与更新，如果都要通过手写代码来进行属性的一一对应赋值，是件很累人的事，通过 对象Mapper映射（例如AutoMapper）功能，只需进行一次配置，即可很方便的实现不同类型对象的数据转换与更新。
+
 #### 数据层文件夹布局
 
 ```
@@ -376,82 +378,77 @@ public interface IInputDto<TKey>
 
 博客 InputDto
 ```C#
-namespace Liuliu.Blogs.Blogs.Dtos
+/// <summary>
+/// 输入DTO：博客信息
+/// </summary>
+public class BlogInputDto : IInputDto<int>
 {
     /// <summary>
-    /// 输入DTO：博客信息
+    /// 获取或设置 博客编号
     /// </summary>
-    public class BlogInputDto : IInputDto<int>
-    {
-        /// <summary>
-        /// 获取或设置 博客编号
-        /// </summary>
-        public int Id { get; set; }
+    public int Id { get; set; }
 
-        /// <summary>
-        /// 获取或设置 博客地址
-        /// </summary>
-        [Required]
-        public string Url { get; set; }
+    /// <summary>
+    /// 获取或设置 博客地址
+    /// </summary>
+    [Required]
+    public string Url { get; set; }
 
-        /// <summary>
-        /// 获取或设置 显示名称
-        /// </summary>
-        [Required]
-        public string Display { get; set; }
-    }
+    /// <summary>
+    /// 获取或设置 显示名称
+    /// </summary>
+    [Required]
+    public string Display { get; set; }
 }
+
 ```
 
 博客 OutputDto
 ```C#
-namespace Liuliu.Blogs.Blogs.Dtos
+/// <summary>
+/// 输出DTO：博客信息
+/// </summary>
+public class BlogOutputDto : IOutputDto, IDataAuthEnabled
 {
     /// <summary>
-    /// 输出DTO：博客信息
+    /// 获取或设置 博客编号
     /// </summary>
-    public class BlogOutputDto : IOutputDto, IDataAuthEnabled
-    {
-        /// <summary>
-        /// 获取或设置 博客编号
-        /// </summary>
-        public int Id { get; set; }
+    public int Id { get; set; }
 
-        /// <summary>
-        /// 获取或设置 博客地址
-        /// </summary>
-        public string Url { get; set; }
+    /// <summary>
+    /// 获取或设置 博客地址
+    /// </summary>
+    public string Url { get; set; }
 
-        /// <summary>
-        /// 获取或设置 显示名称
-        /// </summary>
-        public string Display { get; set; }
+    /// <summary>
+    /// 获取或设置 显示名称
+    /// </summary>
+    public string Display { get; set; }
 
-        /// <summary>
-        /// 获取或设置 已开通
-        /// </summary>
-        public bool IsEnabled { get; set; }
+    /// <summary>
+    /// 获取或设置 已开通
+    /// </summary>
+    public bool IsEnabled { get; set; }
 
-        /// <summary>
-        /// 获取或设置 创建时间
-        /// </summary>
-        public DateTime CreatedTime { get; set; }
+    /// <summary>
+    /// 获取或设置 创建时间
+    /// </summary>
+    public DateTime CreatedTime { get; set; }
 
-        /// <summary>
-        /// 获取或设置 作者编号
-        /// </summary>
-        public int UserId { get; set; }
+    /// <summary>
+    /// 获取或设置 作者编号
+    /// </summary>
+    public int UserId { get; set; }
 
-        /// <summary>
-        /// 获取或设置 是否可更新的数据权限状态
-        /// </summary>
-        public bool Updatable { get; set; }
+    /// <summary>
+    /// 获取或设置 是否可更新的数据权限状态
+    /// </summary>
+    public bool Updatable { get; set; }
 
-        /// <summary>
-        /// 获取或设置 是否可删除的数据权限状态
-        /// </summary>
-        public bool Deletable { get; set; }
-    }
+    /// <summary>
+    /// 获取或设置 是否可删除的数据权限状态
+    /// </summary>
+    public bool Deletable { get; set; }
 }
 ```
 
@@ -459,83 +456,77 @@ namespace Liuliu.Blogs.Blogs.Dtos
 
 文章 InputDto
 ```C#
-namespace Liuliu.Blogs.Blogs.Dtos
+/// <summary>
+/// 输入DTO：文章信息
+/// </summary>
+public class PostInputDto : IInputDto<int>
 {
     /// <summary>
-    /// 输入DTO：文章信息
+    /// 获取或设置 文章编号
     /// </summary>
-    public class PostInputDto : IInputDto<int>
-    {
-        /// <summary>
-        /// 获取或设置 文章编号
-        /// </summary>
-        public int Id { get; set; }
+    public int Id { get; set; }
 
-        /// <summary>
-        /// 获取或设置 文章标题
-        /// </summary>
-        [Required]
-        public string Title { get; set; }
+    /// <summary>
+    /// 获取或设置 文章标题
+    /// </summary>
+    [Required]
+    public string Title { get; set; }
 
-        /// <summary>
-        /// 获取或设置 文章内容
-        /// </summary>
-        [Required]
-        public string Content { get; set; }
-    }
+    /// <summary>
+    /// 获取或设置 文章内容
+    /// </summary>
+    [Required]
+    public string Content { get; set; }
 }
 ```
 
 文章 OutputDto
 ```C#
-namespace Liuliu.Blogs.Blogs.Dtos
+/// <summary>
+/// 输出DTO：文章信息
+/// </summary>
+public class PostOutputDto : IOutputDto, IDataAuthEnabled
 {
     /// <summary>
-    /// 输出DTO：文章信息
+    /// 获取或设置 文章编号
     /// </summary>
-    public class PostOutputDto : IOutputDto, IDataAuthEnabled
-    {
-        /// <summary>
-        /// 获取或设置 文章编号
-        /// </summary>
-        public int Id { get; set; }
+    public int Id { get; set; }
 
-        /// <summary>
-        /// 获取或设置 文章标题
-        /// </summary>
-        public string Title { get; set; }
+    /// <summary>
+    /// 获取或设置 文章标题
+    /// </summary>
+    public string Title { get; set; }
 
-        /// <summary>
-        /// 获取或设置 文章内容
-        /// </summary>
-        public string Content { get; set; }
+    /// <summary>
+    /// 获取或设置 文章内容
+    /// </summary>
+    public string Content { get; set; }
 
-        /// <summary>
-        /// 获取或设置 创建时间
-        /// </summary>
-        public DateTime CreatedTime { get; set; }
+    /// <summary>
+    /// 获取或设置 创建时间
+    /// </summary>
+    public DateTime CreatedTime { get; set; }
 
-        /// <summary>
-        /// 获取或设置 所属博客编号
-        /// </summary>
-        public int BlogId { get; set; }
+    /// <summary>
+    /// 获取或设置 所属博客编号
+    /// </summary>
+    public int BlogId { get; set; }
 
-        /// <summary>
-        /// 获取或设置 作者编号
-        /// </summary>
-        [UserFlag]
-        public int UserId { get; set; }
+    /// <summary>
+    /// 获取或设置 作者编号
+    /// </summary>
+    [UserFlag]
+    public int UserId { get; set; }
 
-        /// <summary>
-        /// 获取或设置 是否可更新的数据权限状态
-        /// </summary>
-        public bool Updatable { get; set; }
+    /// <summary>
+    /// 获取或设置 是否可更新的数据权限状态
+    /// </summary>
+    public bool Updatable { get; set; }
 
-        /// <summary>
-        /// 获取或设置 是否可删除的数据权限状态
-        /// </summary>
-        public bool Deletable { get; set; }
-    }
+    /// <summary>
+    /// 获取或设置 是否可删除的数据权限状态
+    /// </summary>
+    public bool Deletable { get; set; }
 }
 ```
 
@@ -670,6 +661,172 @@ public class BlogConfiguration : EntityTypeConfigurationBase<Blog, int>
             builder.HasOne(m => m.User).WithMany().HasForeignKey(m => m.UserId).OnDelete(DeleteBehavior.Restrict).IsRequired();
         }
     }
+```
+
+## 对象Mapper映射
+对象Mapper映射，指的是同一实体数据的不同类型的相同属性（亦可是不同属性之间，需要单独配置）之间的数据赋值与更新操作。例如：
+
+* 新增业务中使用 InputDto 创建 新的实体类
+* 更新业务中通过 InputDto 更新 已存在的实体类
+* 数据查询中将 实体类 转换为指定的 OutputDto
+* 其他不同类型的数据之间的数据赋值与更新
+
+### 对象Mapper映射相关基础建设
+
+OSharp框架中定义了一些基础建设代码，用于定义对象映射功能。
+#### IMapper
+`IMapper` 接口用于定义对象映射功能，业务代码中依赖此接口实现对象映射工作，系统初始化时，将使用具体的对象映射框架（如 `AutoMapper`，``）
+```C#
+/// <summary>
+/// 定义对象映射功能
+/// </summary>
+public interface IMapper
+{
+    /// <summary>
+    /// 将对象映射为指定类型
+    /// </summary>
+    /// <typeparam name="TTarget">要映射的目标类型</typeparam>
+    /// <param name="source">源对象</param>
+    /// <returns>目标类型的对象</returns>
+    TTarget MapTo<TTarget>(object source);
+
+    /// <summary>
+    /// 使用源类型的对象更新目标类型的对象
+    /// </summary>
+    /// <typeparam name="TSource">源类型</typeparam>
+    /// <typeparam name="TTarget">目标类型</typeparam>
+    /// <param name="source">源对象</param>
+    /// <param name="target">待更新的目标对象</param>
+    /// <returns>更新后的目标类型对象</returns>
+    TTarget MapTo<TSource, TTarget>(TSource source, TTarget target);
+
+    /// <summary>
+    /// 将数据源映射为指定输出DTO的集合
+    /// </summary>
+    /// <typeparam name="TOutputDto">输出DTO类型</typeparam>
+    /// <param name="source">数据源</param>
+    /// <param name="membersToExpand">成员展开</param>
+    /// <returns>输出DTO的结果集</returns>
+    IQueryable<TOutputDto> ToOutput<TOutputDto>(IQueryable source, params Expression<Func<TOutputDto, object>>[] membersToExpand);
+}
+```
+
+#### MapFromAttribute，MapToAttribute
+
+`MapFrom`和`MapTo`两个特性用于类型的 **同类型同名属性** 的简单映射，不能支持复杂属性间的映射关系。
+
+* [MapFrom]：标注从`源类型`到`当前类型`的Mapping映射关系，例如在 OutputDto 上标注`[MapFrom(typeof(Entity))]`，即表示OutputDto是从Entity映射而来的
+```C#
+/// <summary>
+/// 标注当前类型从源类型的Mapping映射关系
+/// </summary>
+public class MapFromAttribute : Attribute
+{
+    /// <summary>
+    /// 初始化一个<see cref="MapFromAttribute"/>类型的新实例
+    /// </summary>
+    public MapFromAttribute(params Type[] sourceTypes)
+    {
+        Check.NotNull(sourceTypes, nameof(sourceTypes));
+        SourceTypes = sourceTypes;
+    }
+
+    /// <summary>
+    /// 源类型
+    /// </summary>
+    public Type[] SourceTypes { get; }
+}
+```
+* [MapTo]：标注从`当前类型`到`目标类型`的Mapping映射关系，例如在 Input 上标注`[MapTo(typeof(Entity))]`，即表示可从InputDto通过映射创建或更新Entity
+```C#
+/// <summary>
+/// 标注当前类型映射到目标类型的Mapping映射关系
+/// </summary>
+public class MapToAttribute : Attribute
+{
+    /// <summary>
+    /// 初始化一个<see cref="MapToAttribute"/>类型的新实例
+    /// </summary>
+    public MapToAttribute(params Type[] targetTypes)
+    {
+        Check.NotNull(targetTypes, nameof(targetTypes));
+        TargetTypes = targetTypes;
+    }
+
+    /// <summary>
+    /// 目标类型
+    /// </summary>
+    public Type[] TargetTypes { get; }
+}
+```
+
+#### IAutoMapperConfiguration
+在使用`AutoMapper`的场景下，要实现复杂属性的映射配置，需要实现此接口并通过`MapperConfigurationExpression`配置复杂类型间的属性映射关系
+```C#
+/// <summary>
+/// 定义通过<see cref="MapperConfigurationExpression"/>配置对象映射的功能
+/// </summary>
+[MultipleDependency]
+public interface IAutoMapperConfiguration
+{
+    /// <summary>
+    /// 创建对象映射
+    /// </summary>
+    /// <param name="mapper">映射配置表达</param>
+    void CreateMaps(MapperConfigurationExpression mapper);
+}
+```
+
+### 博客模块的映射关系配置
+回到我们的 `Liuliu.Blogs` 项目，博客实体和文章实体与他们的DTO之间的映射关系，均可以通过`[MapFrom]，[MapTo]`特性来进行配置，用法很简单，只需在前面定义的DTO类型上加上相应的特性即可：
+
+#### 博客 - Blog
+博客 InputDto
+```C#
+/// <summary>
+/// 输入DTO：博客信息
+/// </summary>
+[MapTo(typeof(Blog))]
+public class BlogInputDto : IInputDto<int>
+{
+    //...
+}
+```
+博客 OutputDto
+
+```C#
+/// <summary>
+/// 输出DTO：博客信息
+/// </summary>
+[MapFrom(typeof(Blog))]
+public class BlogOutputDto : IOutputDto, IDataAuthEnabled
+{
+    //...
+}
+```
+#### 文章 - Post
+文章 InputDto
+```C#
+/// <summary>
+/// 输入DTO：文章信息
+/// </summary>
+[MapTo(typeof(Post))]
+public class PostInputDto : IInputDto<int>
+{
+    //...
+}
+```
+文章 OutputDto
+
+```C#
+/// <summary>
+/// 输出DTO：文章信息
+/// </summary>
+[MapFrom(typeof(Post))]
+public class PostOutputDto : IOutputDto, IDataAuthEnabled
+{
+    //...
+}
 ```
 
 至此，博客模块的数据层代码实现完毕。下面可进行数据迁移将数据结构更新到现有数据库中。
