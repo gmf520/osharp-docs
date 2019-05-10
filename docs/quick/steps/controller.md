@@ -36,6 +36,7 @@ src                                         # 源代码文件夹
 ## API定义及访问控制
 
 ### API定义
+API定义即MVC或WebApi的 `Area-Controller-Action` 定义，为方便及规范此步骤的工作，OSharp定义了一些基础控制器基类，继承这些基类，很容易实现API定义。
 
 
 ### Module树形结构及依赖
