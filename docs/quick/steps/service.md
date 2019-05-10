@@ -31,14 +31,17 @@ OSharp 的业务模块代码结构设计，也是根据这一原则来设计的�
 综上，服务层代码布局如下所示：
 
 ```
-src                                 # 源代码文件夹
-└─Liuliu.Blogs.Core                 # 项目核心工程
-   └─Blogs                          # 博客模块文件夹
-       ├─BlogsPack.cs               # 博客模块入口类
-       ├─BlogsService.cs            # 博客服务类
-       ├─BlogsService.Blog.cs       # 博客模块-博客服务类
-       ├─BlogsService.Post.cs       # 博客模块-文章服务类
-       └─IBlogsContract.cs          # 博客模块服务接口
+src                                         # 源代码文件夹
+└─Liuliu.Blogs.Core                         # 项目核心工程
+   └─Blogs                                  # 博客模块文件夹
+        ├─Events                            # 业务事件文件夹
+        │    ├─VerifyBlogEventData.cs       # 审核博客事件数据
+        │    └─VerifyBlogEventHandler.cs    # 审核博客事件处理器
+        ├─BlogsPack.cs                      # 博客模块入口类
+        ├─BlogsService.cs                   # 博客服务类
+        ├─BlogsService.Blog.cs              # 博客模块-博客服务类
+        ├─BlogsService.Post.cs              # 博客模块-文章服务类
+        └─IBlogsContract.cs                 # 博客模块服务接口
 ```
 
 ## 服务接口 `IBlogsContract`
@@ -1005,54 +1008,54 @@ public partial class BlogsService
 前面多次提到，每个Pack模块都是继承自一个 模块基类`OsharpPack`，这个基类用于定义 模块初始化`UsePack` 过程中未涉及 `AspNetCore` 环境的模块。
 ```C#
 /// <summary>
-    /// OSharp模块基类
+/// OSharp模块基类
+/// </summary>
+public abstract class OsharpPack
+{
+    /// <summary>
+    /// 获取 模块级别，级别越小越先启动
     /// </summary>
-    public abstract class OsharpPack
+    public virtual PackLevel Level => PackLevel.Business;
+
+    /// <summary>
+    /// 获取 模块启动顺序，模块启动的顺序先按级别启动，同一级别内部再按此顺序启动，
+    /// 级别默认为0，表示无依赖，需要在同级别有依赖顺序的时候，再重写为>0的顺序值
+    /// </summary>
+    public virtual int Order => 0;
+
+    /// <summary>
+    /// 获取 是否已可用
+    /// </summary>
+    public bool IsEnabled { get; protected set; }
+
+    /// <summary>
+    /// 将模块服务添加到依赖注入服务容器中
+    /// </summary>
+    /// <param name="services">依赖注入服务容器</param>
+    /// <returns></returns>
+    public virtual IServiceCollection AddServices(IServiceCollection services)
     {
-        /// <summary>
-        /// 获取 模块级别，级别越小越先启动
-        /// </summary>
-        public virtual PackLevel Level => PackLevel.Business;
-
-        /// <summary>
-        /// 获取 模块启动顺序，模块启动的顺序先按级别启动，同一级别内部再按此顺序启动，
-        /// 级别默认为0，表示无依赖，需要在同级别有依赖顺序的时候，再重写为>0的顺序值
-        /// </summary>
-        public virtual int Order => 0;
-
-        /// <summary>
-        /// 获取 是否已可用
-        /// </summary>
-        public bool IsEnabled { get; protected set; }
-
-        /// <summary>
-        /// 将模块服务添加到依赖注入服务容器中
-        /// </summary>
-        /// <param name="services">依赖注入服务容器</param>
-        /// <returns></returns>
-        public virtual IServiceCollection AddServices(IServiceCollection services)
-        {
-            return services;
-        }
-
-        /// <summary>
-        /// 应用模块服务
-        /// </summary>
-        /// <param name="provider">服务提供者</param>
-        public virtual void UsePack(IServiceProvider provider)
-        {
-            IsEnabled = true;
-        }
-
-        /// <summary>
-        /// 获取当前模块的依赖模块类型
-        /// </summary>
-        /// <returns></returns>
-        internal Type[] GetDependPackTypes(Type packType = null)
-        {
-            // ...
-        }
+        return services;
     }
+
+    /// <summary>
+    /// 应用模块服务
+    /// </summary>
+    /// <param name="provider">服务提供者</param>
+    public virtual void UsePack(IServiceProvider provider)
+    {
+        IsEnabled = true;
+    }
+
+    /// <summary>
+    /// 获取当前模块的依赖模块类型
+    /// </summary>
+    /// <returns></returns>
+    internal Type[] GetDependPackTypes(Type packType = null)
+    {
+        // ...
+    }
+}
 ```
 
 模块基类`OsharpPack` 定义了两个可重写属性：
