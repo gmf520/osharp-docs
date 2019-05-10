@@ -88,9 +88,12 @@ src                                         # 源代码文件夹
 │      │    ├─BlogOutputDto.cs              # 博客输出DTO
 │      │    ├─PostInputDto.cs               # 文章输入DTO
 │      │    └─PostOutputDto.cs              # 文章输出DTO
-│      └─Entities                           # 博客模块实体类文件夹
-│           ├─Blog.cs                       # 博客实体类
-│           └─Post.cs                       # 文章实体类
+│      ├─Entities                           # 博客模块实体类文件夹
+│      │    ├─Blog.cs                       # 博客实体类
+│      │    └─Post.cs                       # 文章实体类
+│      └─Events                             # 业务事件文件夹
+│           ├─VerifyBlogEventData.cs        # 审核博客事件数据
+│           └─VerifyBlogEventHandler.cs     # 审核博客事件处理器
 ├─Liuliu.Blogs.EntityConfiguration          # 实体映射配置工程
 │  └─Blogs                                  # 博客模块文件夹
 │      ├─BlogConfiguration.cs               # 博客实体映射配置类

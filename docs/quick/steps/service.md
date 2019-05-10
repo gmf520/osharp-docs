@@ -34,14 +34,14 @@ OSharp 的业务模块代码结构设计，也是根据这一原则来设计的�
 src                                         # 源代码文件夹
 └─Liuliu.Blogs.Core                         # 项目核心工程
    └─Blogs                                  # 博客模块文件夹
-        ├─Events                            # 业务事件文件夹
-        │    ├─VerifyBlogEventData.cs       # 审核博客事件数据
-        │    └─VerifyBlogEventHandler.cs    # 审核博客事件处理器
         ├─BlogsPack.cs                      # 博客模块入口类
         ├─BlogsService.cs                   # 博客服务类
         ├─BlogsService.Blog.cs              # 博客模块-博客服务类
         ├─BlogsService.Post.cs              # 博客模块-文章服务类
-        └─IBlogsContract.cs                 # 博客模块服务接口
+        ├─IBlogsContract.cs                 # 博客模块服务接口
+        └─Events                            # 业务事件文件夹
+            ├─VerifyBlogEventData.cs        # 审核博客事件数据
+            └─VerifyBlogEventHandler.cs     # 审核博客事件处理器
 ```
 
 ## 服务接口 `IBlogsContract`
