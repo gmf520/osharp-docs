@@ -223,6 +223,7 @@ namespace Liuliu.Blogs.Blogs.Entities
     /// <summary>
     /// 实体类：博客信息
     /// </summary>
+    [Description("博客信息")]
     public class Blog : EntityBase<int>, ICreatedTime, ISoftDeletable
     {
         /// <summary>
@@ -272,6 +273,7 @@ namespace Liuliu.Blogs.Blogs.Entities
     /// <summary>
     /// 实体类：文章信息
     /// </summary>
+    [Description("文章信息")]
     public class Post:EntityBase<int>,ICreatedTime,ISoftDeletable
     {
         /// <summary>

@@ -735,11 +735,13 @@ public class PostController : AdminApiController
     }
 }
 ```
+至此，博客模块的 API层代码 实现完毕。
 
-至此，博客模块的 对外API层 代码实现完毕，运行后端代码，框架初始化时将通过 **反射读取API层代码结构**，进行博客模块的 **API模块`Module` - API功能点`Function`** 的数据初始化，并分配好 **依赖关系**，功能点的 **访问控制** 等约束。
+### API数据展示
 
-## 数据展示
+运行`Liuliu.Blogs`项目的后端工程`Liuliu.Blogs.Web`，框架初始化时将通过 **反射读取API层代码结构**，进行博客模块的 **API模块`Module` - API功能点`Function`** 的数据初始化，并分配好 **依赖关系**，功能点的 **访问控制** 等约束。
 
+####Swagger查看数据
 在SwaggerUI中，我们可以看到生成的 API模块
 
 * 博客 - Blog
@@ -748,11 +750,82 @@ public class PostController : AdminApiController
 * 文章 - Post
 ![文章API](../../assets/imgs/quick/steps/controller/003.png "文章API"){.img-fluid tag=2}
 
-* 后台的 **权限安全/模块管理** 中，可看到 `博客模块` 的模块数据以及模块分配的功能点信息
-![API功能点Function](../../assets/imgs/quick/steps/controller/006.png "API功能点Function"){.img-fluid tag=2}
+#### 后台管理查看数据
+运行前端的 Angular 工程，我们可以在后台管理的 **权限安全/模块管理** 中，可看到 `博客模块` 的模块数据以及模块分配的功能点信息
+![后台博客模块数据](../../assets/imgs/quick/steps/controller/006.png "后台博客模块数据"){.img-fluid tag=2}
+
+#### 数据库查看数据
+
+打开数据库管理工具，可以看到 Module 和 Function 两个表的相关数据
 
 * 数据库中的 API模块Module
 ![API模块Module](../../assets/imgs/quick/steps/controller/004.png "API模块Module"){.img-fluid tag=2}
 
 * 数据库中的 API功能点Function
 ![API功能点Function](../../assets/imgs/quick/steps/controller/005.png "API功能点Function"){.img-fluid tag=2}
+
+## 博客模块授权
+
+### 相关角色和用户
+
+#### 博客模块相关角色
+根据 <[业务模块设计#WebAPI层](index.md#webapi)> 中对权限控制的定义，我们需要创建两个相关角色
+
+* 博主：可申请博客，更新自己的博客，对自己的文章进行新增、更新、删除操作
+* 博客管理员：可审批、更新、删除所有博客，对所有文章进行更新、删除操作
+
+新增的两个角色如下：
+
+名称       | 备注           | 管理角色 | 默认 | 锁定
+---------|--------------|---------|-----|---
+博客管理员 | 博客管理员角色 | 是       | 否   | 否
+博主       | 博客主人角色   | 否       | 否   | 否
+
+#### 注册两个测试用户，并给用户分配角色
+新增测试用户如下：
+
+用户名           | 用户昵称       | 分配角色
+-----------------|------------|------
+123202901@qq.com | 博客管理员测试 | 博客管理员
+31529019@qq.com  | 博主测试       | 博主
+
+### 功能权限
+
+#### 给角色分配API模块
+
+API模块`Module`对应的是后端的API模块，将Module分配给角色`Role`，相应的Role即拥有Module的所有功能点`Function`
+![功能权限授权示意图](../../assets/imgs/quick/intro/004.png "功能权限授权示意图"){.img-fluid tag=3}
+
+* 给 `博客管理员` 角色分配功能权限
+![博客管理员功能权限](../../assets/imgs/quick/steps/controller/008.png "博客管理员功能权限"){.img-fluid tag=3}
+
+* 给 `博主` 角色分配功能权限
+![博主功能权限](../../assets/imgs/quick/steps/controller/009.png "博主功能权限"){.img-fluid tag=3}
+
+#### 功能权限预览
+分配好之后，拥有特定角色的用户，便拥有模块所带来的功能点权限
+
+* 博客管理员用户功能权限
+![博客管理员用户功能权限](../../assets/imgs/quick/steps/controller/010.png "博客管理员用户功能权限"){.img-fluid tag=3}
+* 博主用户功能权限
+![博主用户功能权限](../../assets/imgs/quick/steps/controller/011.png "博主用户功能权限"){.img-fluid tag=3}
+
+### 数据权限
+
+OSharp框架内默认提供 **角色 - 实体** 配对的数据权限指派。
+
+#### 博客管理员
+对于`博客管理员`角色，博客管理员能管理 博客`Blog` 和 文章`Post` 的所有数据，没有数据权限的约束要求。
+
+#### 博主
+对于`博主`角色，博主只能查看并管理 **自己的** 博客与文章，有数据权限的约束要求。对博主的数据权限约束如下：
+
+* 对博客的读取、更新操作限制 `UserId = @当前用户`
+![博主 - 博客 数据权限](../../assets/imgs/quick/steps/controller/012.png "博主 - 博客 数据权限"){.img-fluid tag=3}
+
+* 对文章的读取、更新、删除操作限制 `UserId = @当前用户`
+![博主 - 文章 数据权限](../../assets/imgs/quick/steps/controller/013.png "博主 - 文章 数据权限"){.img-fluid tag=3}
+
+如此，对博客模块的数据权限约束分配完毕。
+
+在下一节中，我们将完善前端项目，添加博客模块的前端实现，你将看到一个完整的博客模块实现。
