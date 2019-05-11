@@ -741,13 +741,13 @@ public class PostController : AdminApiController
 在SwaggerUI中，我们可以看到生成的 API模块
 
 * 博客 - Blog
-![博客API](../../assets/imgs/quick/steps/controller/002.png "博客API"){.img-fluid tag=1}
+![博客API](../../assets/imgs/quick/steps/controller/002.png "博客API"){.img-fluid tag=2}
 
 * 文章 - Post
-![文章API](../../assets/imgs/quick/steps/controller/003.png "文章API"){.img-fluid tag=1}
+![文章API](../../assets/imgs/quick/steps/controller/003.png "文章API"){.img-fluid tag=2}
 
 * 数据库中的 API模块Module
-![API模块Module](../../assets/imgs/quick/steps/controller/004.png "API模块Module"){.img-fluid tag=1}
+![API模块Module](../../assets/imgs/quick/steps/controller/004.png "API模块Module"){.img-fluid tag=2}
 
 * 数据库中的 API功能点Function
-![API功能点Function](../../assets/imgs/quick/steps/controller/005.png "API功能点Function"){.img-fluid tag=1}
+![API功能点Function](../../assets/imgs/quick/steps/controller/005.png "API功能点Function"){.img-fluid tag=2}
