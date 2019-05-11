@@ -97,10 +97,9 @@ public interface IBlogsContract
     /// <summary>
     /// 审核博客信息
     /// </summary>
-    /// <param name="id">博客编号</param>
-    /// <param name="isEnabled">是否通过</param>
+    /// <param name="dto">审核博客信息DTO信息</param>
     /// <returns>业务操作结果</returns>
-    Task<OperationResult> VerifyBlog(int id, bool isEnabled);
+    Task<OperationResult> VerifyBlog(BlogVerifyDto dto);
 
     /// <summary>
     /// 更新博客信息
@@ -690,6 +689,11 @@ public class VerifyBlogEventData : EventDataBase
     /// 获取或设置 审核是否通过
     /// </summary>
     public bool IsEnabled { get; set; }
+
+    /// <summary>
+    /// 获取或设置 审核理由
+    /// </summary>
+    public string Reason { get; set; }
 }
 ```
 
@@ -715,7 +719,7 @@ public class VerifyBlogEventHandler : EventHandlerBase<VerifyBlogEventData>
     public override void Handle(VerifyBlogEventData eventData)
     {
         _logger.LogInformation(
-            $"触发 审核博客事件处理器，用户“{eventData.UserName}”的博客“{eventData.BlogName}”审核结果：{(eventData.IsEnabled ? "通过" : "未通过")}");
+            $"触发 审核博客事件处理器，用户“{eventData.UserName}”的博客“{eventData.BlogName}”审核结果：{(eventData.IsEnabled ? "通过" : "未通过")}，审核理由：{eventData.Reason}");
     }
 }
 ```
@@ -821,19 +825,20 @@ public partial class BlogsService
     /// <summary>
     /// 审核博客信息
     /// </summary>
-    /// <param name="id">博客编号</param>
-    /// <param name="isEnabled">是否通过</param>
+    /// <param name="dto">审核博客信息DTO信息</param>
     /// <returns>业务操作结果</returns>
-    public virtual async Task<OperationResult> VerifyBlog(int id, bool isEnabled)
+    public virtual async Task<OperationResult> VerifyBlog(BlogVerifyDto dto)
     {
-        Blog blog = await BlogRepository.GetAsync(id);
+        Check.Validate(dto, nameof(dto));
+        
+        Blog blog = await BlogRepository.GetAsync(dto.Id);
         if (blog == null)
         {
-            return new OperationResult(OperationResultType.QueryNull, $"编号为“{id}”的博客信息不存在");
+            return new OperationResult(OperationResultType.QueryNull, $"编号为“{dto.Id}”的博客信息不存在");
         }
 
         // 更新博客
-        blog.IsEnabled = isEnabled;
+        blog.IsEnabled = dto.IsEnabled;
         int count = await BlogRepository.UpdateAsync(blog);
 
         User user = await UserRepository.GetAsync(blog.UserId);
@@ -843,7 +848,7 @@ public partial class BlogsService
         }
 
         // 如果开通博客，给用户开通博主身份
-        if (isEnabled)
+        if (dto.IsEnabled)
         {
             // 查找博客主的角色，博主角色名可由配置系统获得
             const string roleName = "博主";
@@ -864,7 +869,7 @@ public partial class BlogsService
         }
 
         OperationResult result = count > 0
-            ? new OperationResult(OperationResultType.Success, $"博客“{blog.Display}”审核 {(isEnabled ? "通过" : "未通过")}")
+            ? new OperationResult(OperationResultType.Success, $"博客“{blog.Display}”审核 {(dto.IsEnabled ? "通过" : "未通过")}，审核理由：{dto.Reason}")
             : OperationResult.NoChanged;
         if (result.Succeeded)
         {
@@ -872,7 +877,8 @@ public partial class BlogsService
             {
                 BlogName = blog.Display,
                 UserName = user.NickName,
-                IsEnabled = isEnabled
+                IsEnabled = blog.IsEnabled,
+                Reason = dto.Reason
             };
             EventBus.Publish(eventData);
         }
@@ -887,6 +893,8 @@ public partial class BlogsService
     /// <returns>业务操作结果</returns>
     public virtual Task<OperationResult> UpdateBlogs(params BlogInputDto[] dtos)
     {
+        Check.Validate<BlogInputDto, int>(dtos, nameof(dtos) );
+
         return BlogRepository.UpdateAsync(dtos, async (dto, entity) =>
         {
             if (await BlogRepository.CheckExistsAsync(m => m.Url == dto.Url, dto.Id))
@@ -903,6 +911,8 @@ public partial class BlogsService
     /// <returns>业务操作结果</returns>
     public virtual Task<OperationResult> DeleteBlogs(params int[] ids)
     {
+        Check.NotNull(ids, nameof(ids));
+        
         return BlogRepository.DeleteAsync(ids, entity =>
         {
             if (PostRepository.Query(m => m.BlogId == entity.Id).Any())

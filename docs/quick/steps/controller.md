@@ -145,6 +145,59 @@ public class BlogController : AdminApiController
 public PageData<BlogOutputDto> Read(PageRequest request)
 { }
 ```
+#### DependOnFunctionAttribute
+由于业务的关联性和UI的合理布局，API功能点并 **不是单独存在** 的，要完成一个完整的操作，各个API功能点可能会 **存在依赖性**。例如：
+
+* 在要进行管理列表中的 `新增、更新、删除` 等操作，首先要能进入列表，即列表数据的 `读取` 操作，那么 `新增、更新、删除` 等操作就对 `读取` 操作存在依赖需求。
+* 对于`新增、更新`操作，通常需要对数据进行`唯一性验证`，那么也会存在依赖关系
+
+为了在代码中描述这些依赖关系，OSharp中定义了`DependOnFunctionAttribute`特性，在Action上标注当前API对其他API（可跨Controller，跨Area）的依赖关系。
+```C#
+/// <summary>
+/// 模块依赖的功能信息，用于提取模块信息Module时确定模块依赖的功能（模块依赖当前功能和此特性设置的其他功能）
+/// </summary>
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
+public class DependOnFunctionAttribute : Attribute
+{
+    /// <summary>
+    /// 初始化一个<see cref="DependOnFunctionAttribute"/>类型的新实例
+    /// </summary>
+    public DependOnFunctionAttribute(string action)
+    {
+        Action = action;
+    }
+
+    /// <summary>
+    /// 获取或设置 区域名称，为null（不设置）则使用当前功能所在区域，如要表示无区域的功能，需设置为空字符串""
+    /// </summary>
+    public string Area { get; set; }
+
+    /// <summary>
+    /// 获取或设置 控制器名称，为null（不设置）则使用当前功能所在控制器
+    /// </summary>
+    public string Controller { get; set; }
+
+    /// <summary>
+    /// 获取 功能名称Action，不能为空
+    /// </summary>
+    public string Action { get; }
+}
+```
+如下示例，表明管理列表中的`新增文章`业务对`文章读取`有依赖关系
+```C# hl_lines="8"
+/// <summary>
+/// 新增文章
+/// </summary>
+/// <param name="dtos">新增文章信息</param>
+/// <returns>JSON操作结果</returns>
+[HttpPost]
+[ModuleInfo]
+[DependOnFunction("Read")]
+[ServiceFilter(typeof(UnitOfWorkAttribute))]
+[Description("新增")]
+public async Task<AjaxResult> Create(PostInputDto[] dtos)
+{ }
+```
 
 ### API访问控制
 API的访问控制，分为三种：
@@ -437,5 +490,264 @@ public async Task<AjaxResult> Creat(PostInputDto[] dtos)
 ```
 
 ## 博客模块API实现
-### 博客 - Blog
-### 文章 - Post
+下面，我们来综合运用上面定义的基础建设，来实现 博客模块 的API层。
+
+API层的实现代码，将实现如下关键点：
+
+* 定义各实体的 Controller 和 Action，使用 `[Description]` 特性来声明各个功能点的显示名称
+* 使用`[ModuleInfo]`特性来定义API模块的树形结构
+* 使用`[DependOnFunction]`来定义各API模块之间的依赖关系
+* 在`AdminApiController`基类中，已经添加了`[RoleLimit]`特性来配置所有`Admin`区域的API都使用 **角色限制** 的访问控制，如需特殊的访问控制，可在 Action 上单独配置
+* 涉及实体 `增加、更新、删除` 操作的业务，按需要添加 `[ServiceFilter(typeof(UnitOfWorkAttribute))]` 特性来实现事务自动提交
+
+!!! node
+    API模块对角色的权限分配，将在后台管理界面中进行权限分配。
+
+### 博客 - BlogController
+根据 <[业务模块设计#WebAPI层](index.md#webapi)> 中对博客管理的定义，Blog实体的对外API定义如下表所示：
+
+| 操作     | 访问类型 | 操作角色               |
+| -------- | -------- | ---------------------- |
+| 读取     | 角色访问 | 博客管理员、博主       |
+| 申请开通 | 登录访问 | 已登录未开通博客的用户 |
+| 开通审核 | 角色访问 | 博客管理员             |
+| 更新     | 角色访问 | 博客管理员、博主       |
+| 删除     | 角色访问 | 博客管理员             |
+
+实现代码如下：
+```C#
+[ModuleInfo(Position = "Blogs", PositionName = "博客模块")]
+[Description("管理-博客信息")]
+public class BlogController : AdminApiController
+{
+    /// <summary>
+    /// 初始化一个<see cref="BlogController"/>类型的新实例
+    /// </summary>
+    public BlogController(IBlogsContract blogsContract,
+        IFilterService filterService)
+    {
+        BlogsContract = blogsContract;
+        FilterService = filterService;
+    }
+
+    /// <summary>
+    /// 获取或设置 数据过滤服务对象
+    /// </summary>
+    protected IFilterService FilterService { get; }
+
+    /// <summary>
+    /// 获取或设置 博客模块业务契约对象
+    /// </summary>
+    protected IBlogsContract BlogsContract { get; }
+
+    /// <summary>
+    /// 读取博客列表信息
+    /// </summary>
+    /// <param name="request">页请求信息</param>
+    /// <returns>博客列表分页信息</returns>
+    [HttpPost]
+    [ModuleInfo]
+    [Description("读取")]
+    public PageData<BlogOutputDto> Read(PageRequest request)
+    {
+        Check.NotNull(request, nameof(request));
+
+        Expression<Func<Blog, bool>> predicate = FilterService.GetExpression<Blog>(request.FilterGroup);
+        var page = BlogsContract.Blogs.ToPage<Blog, BlogOutputDto>(predicate, request.PageCondition);
+
+        return page.ToPageData();
+    }
+
+    /// <summary>
+    /// 申请开通博客
+    /// </summary>
+    /// <param name="dto">博客输入DTO</param>
+    /// <returns>JSON操作结果</returns>
+    [HttpPost]
+    [ModuleInfo]
+    [DependOnFunction("Read")]
+    [ServiceFilter(typeof(UnitOfWorkAttribute))]
+    [Description("申请")]
+    public async Task<AjaxResult> Apply(BlogInputDto dto)
+    {
+        Check.NotNull(dto, nameof(dto));
+        OperationResult result = await BlogsContract.ApplyForBlog(dto);
+        return result.ToAjaxResult();
+    }
+
+    /// <summary>
+    /// 审核博客
+    /// </summary>
+    /// <param name="dto">博客输入DTO</param>
+    /// <returns>JSON操作结果</returns>
+    [HttpPost]
+    [ModuleInfo]
+    [DependOnFunction("Read")]
+    [ServiceFilter(typeof(UnitOfWorkAttribute))]
+    [Description("申请")]
+    public async Task<AjaxResult> Verify(BlogVerifyDto dto)
+    {
+        Check.NotNull(dto, nameof(dto));
+        OperationResult result = await BlogsContract.VerifyBlog(dto);
+        return result.ToAjaxResult();
+    }
+
+    /// <summary>
+    /// 更新博客信息
+    /// </summary>
+    /// <param name="dtos">博客信息输入DTO</param>
+    /// <returns>JSON操作结果</returns>
+    [HttpPost]
+    [ModuleInfo]
+    [DependOnFunction("Read")]
+    [ServiceFilter(typeof(UnitOfWorkAttribute))]
+    [Description("更新")]
+    public async Task<AjaxResult> Update(BlogInputDto[] dtos)
+    {
+        Check.NotNull(dtos, nameof(dtos));
+        OperationResult result = await BlogsContract.UpdateBlogs(dtos);
+        return result.ToAjaxResult();
+    }
+
+    /// <summary>
+    /// 删除博客信息
+    /// </summary>
+    /// <param name="ids">博客信息编号</param>
+    /// <returns>JSON操作结果</returns>
+    [HttpPost]
+    [ModuleInfo]
+    [DependOnFunction("Read")]
+    [ServiceFilter(typeof(UnitOfWorkAttribute))]
+    [Description("删除")]
+    public async Task<AjaxResult> Delete(int[] ids)
+    {
+        Check.NotNull(ids, nameof(ids));
+        OperationResult result = await BlogsContract.DeleteBlogs(ids);
+        return result.ToAjaxResult();
+    }
+}
+```
+
+### 文章 - PostController
+根据 <[业务模块设计#WebAPI层](index.md#webapi)> 中对文章管理的定义，Post实体的对外API定义如下表所示：
+
+| 操作 | 访问类型 | 操作角色         |
+| ---- | -------- | ---------------- |
+| 读取 | 角色访问 | 博客管理员、博主 |
+| 新增 | 角色访问 | 博主             |
+| 更新 | 角色访问 | 博客管理员、博主 |
+| 删除 | 角色访问 | 博客管理员、博主 |
+
+实现代码如下：
+
+```C#
+[ModuleInfo(Position = "Blogs", PositionName = "博客模块")]
+[Description("管理-文章信息")]
+public class PostController : AdminApiController
+{
+    /// <summary>
+    /// 初始化一个<see cref="PostController"/>类型的新实例
+    /// </summary>
+    protected PostController(IBlogsContract blogsContract,
+        IFilterService filterService)
+    {
+        BlogsContract = blogsContract;
+        FilterService = filterService;
+    }
+
+    /// <summary>
+    /// 获取或设置 数据过滤服务对象
+    /// </summary>
+    protected IFilterService FilterService { get; }
+
+    /// <summary>
+    /// 获取或设置 博客模块业务契约对象
+    /// </summary>
+    protected IBlogsContract BlogsContract { get; }
+
+    /// <summary>
+    /// 读取文章列表信息
+    /// </summary>
+    /// <param name="request">页请求信息</param>
+    /// <returns>文章列表分页信息</returns>
+    [HttpPost]
+    [ModuleInfo]
+    [Description("读取")]
+    public virtual PageData<PostOutputDto> Read(PageRequest request)
+    {
+        Check.NotNull(request, nameof(request));
+
+        Expression<Func<Post, bool>> predicate = FilterService.GetExpression<Post>(request.FilterGroup);
+        var page = BlogsContract.Posts.ToPage<Post, PostOutputDto>(predicate, request.PageCondition);
+
+        return page.ToPageData();
+    }
+
+    /// <summary>
+    /// 新增文章信息
+    /// </summary>
+    /// <param name="dtos">文章信息输入DTO</param>
+    /// <returns>JSON操作结果</returns>
+    [HttpPost]
+    [ModuleInfo]
+    [DependOnFunction("Read")]
+    [ServiceFilter(typeof(UnitOfWorkAttribute))]
+    [Description("新增")]
+    public virtual async Task<AjaxResult> Create(PostInputDto[] dtos)
+    {
+        Check.NotNull(dtos, nameof(dtos));
+        OperationResult result = await BlogsContract.CreatePosts(dtos);
+        return result.ToAjaxResult();
+    }
+
+    /// <summary>
+    /// 更新文章信息
+    /// </summary>
+    /// <param name="dtos">文章信息输入DTO</param>
+    /// <returns>JSON操作结果</returns>
+    [HttpPost]
+    [ModuleInfo]
+    [DependOnFunction("Read")]
+    [ServiceFilter(typeof(UnitOfWorkAttribute))]
+    [Description("更新")]
+    public virtual async Task<AjaxResult> Update(PostInputDto[] dtos)
+    {
+        Check.NotNull(dtos, nameof(dtos));
+        OperationResult result = await BlogsContract.UpdatePosts(dtos);
+        return result.ToAjaxResult();
+    }
+
+    /// <summary>
+    /// 删除文章信息
+    /// </summary>
+    /// <param name="ids">文章信息编号</param>
+    /// <returns>JSON操作结果</returns>
+    [HttpPost]
+    [ModuleInfo]
+    [DependOnFunction("Read")]
+    [ServiceFilter(typeof(UnitOfWorkAttribute))]
+    [Description("删除")]
+    public virtual async Task<AjaxResult> Delete(int[] ids)
+    {
+        Check.NotNull(ids, nameof(ids));
+        OperationResult result = await BlogsContract.DeletePosts(ids);
+        return result.ToAjaxResult();
+    }
+}
+```
+
+至此，博客模块的 对外API层 代码实现完毕，运行后端代码，框架初始化时将通过 **反射读取API层代码结构**，进行博客模块的 **API模块`Module` - API功能点`Function`** 的数据初始化，并分配好 **依赖关系**，功能点的 **访问控制** 等约束。
+
+在SwaggerUI中，我们可以看到生成的 API模块
+
+* 博客 - Blog
+![博客API](../../assets/imgs/quick/steps/controller/002.png "博客API"){.img-fluid tag=1}
+
+* 文章 - Post
+![文章API](../../assets/imgs/quick/steps/controller/003.png "文章API"){.img-fluid tag=1}
+
+* 数据库中的 API模块Module
+![API模块Module](../../assets/imgs/quick/steps/controller/004.png "API模块Module"){.img-fluid tag=1}
+
+* 数据库中的 API功能点Function
+![API功能点Function](../../assets/imgs/quick/steps/controller/005.png "API功能点Function"){.img-fluid tag=1}

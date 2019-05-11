@@ -21,6 +21,7 @@ src                                     # 源代码文件夹
 │      ├─Dtos                           # 博客模块DTO文件夹
 │      │    ├─BlogInputDto.cs           # 博客输入DTO
 │      │    ├─BlogOutputDto.cs          # 博客输出DTO
+│      │    ├─BlogVerifyDto.cs          # 博客审核DTO
 │      │    ├─PostInputDto.cs           # 文章输入DTO
 │      │    └─PostOutputDto.cs          # 文章输出DTO
 │      └─Entities                       # 博客模块实体类文件夹
@@ -449,6 +450,31 @@ public class BlogOutputDto : IOutputDto, IDataAuthEnabled
     /// 获取或设置 是否可删除的数据权限状态
     /// </summary>
     public bool Deletable { get; set; }
+}
+```
+
+博客 VerifyDto
+```C#
+/// <summary>
+/// 输入DTO：审核博客信息
+/// </summary>
+public class BlogVerifyDto : IInputDto<int>
+{
+    /// <summary>
+    /// 获取或设置 博客编号
+    /// </summary>
+    public int Id { get; set; }
+
+    /// <summary>
+    /// 获取或设置 是否开通
+    /// </summary>
+    public bool IsEnabled { get; set; }
+
+    /// <summary>
+    /// 获取或设置 审核理由
+    /// </summary>
+    [Required]
+    public string Reason { get; set; }
 }
 ```
 
