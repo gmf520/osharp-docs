@@ -507,11 +507,11 @@ API层的实现代码，将实现如下关键点：
 根据 <[业务模块设计#WebAPI层](index.md#webapi)> 中对博客管理的定义，Blog实体的对外API定义如下表所示：
 
 | 操作     | 访问类型 | 操作角色               |
-| -------- | -------- | ---------------------- |
-| 读取     | 角色访问 | 博客管理员、博主       |
+|--------|------|--------------------|
+| 读取     | 角色访问 | 博客管理员、博主        |
 | 申请开通 | 登录访问 | 已登录未开通博客的用户 |
 | 开通审核 | 角色访问 | 博客管理员             |
-| 更新     | 角色访问 | 博客管理员、博主       |
+| 更新     | 角色访问 | 博客管理员、博主        |
 | 删除     | 角色访问 | 博客管理员             |
 
 实现代码如下：
@@ -631,10 +631,10 @@ public class BlogController : AdminApiController
 ### 文章 - PostController
 根据 <[业务模块设计#WebAPI层](index.md#webapi)> 中对文章管理的定义，Post实体的对外API定义如下表所示：
 
-| 操作 | 访问类型 | 操作角色         |
-| ---- | -------- | ---------------- |
+| 操作 | 访问类型 | 操作角色        |
+|----|------|---------------|
 | 读取 | 角色访问 | 博客管理员、博主 |
-| 新增 | 角色访问 | 博主             |
+| 新增 | 角色访问 | 博主            |
 | 更新 | 角色访问 | 博客管理员、博主 |
 | 删除 | 角色访问 | 博客管理员、博主 |
 
@@ -738,6 +738,8 @@ public class PostController : AdminApiController
 
 至此，博客模块的 对外API层 代码实现完毕，运行后端代码，框架初始化时将通过 **反射读取API层代码结构**，进行博客模块的 **API模块`Module` - API功能点`Function`** 的数据初始化，并分配好 **依赖关系**，功能点的 **访问控制** 等约束。
 
+## 数据展示
+
 在SwaggerUI中，我们可以看到生成的 API模块
 
 * 博客 - Blog
@@ -745,6 +747,9 @@ public class PostController : AdminApiController
 
 * 文章 - Post
 ![文章API](../../assets/imgs/quick/steps/controller/003.png "文章API"){.img-fluid tag=2}
+
+* 后台的 **权限安全/模块管理** 中，可看到 `博客模块` 的模块数据以及模块分配的功能点信息
+![API功能点Function](../../assets/imgs/quick/steps/controller/006.png "API功能点Function"){.img-fluid tag=2}
 
 * 数据库中的 API模块Module
 ![API模块Module](../../assets/imgs/quick/steps/controller/004.png "API模块Module"){.img-fluid tag=2}
