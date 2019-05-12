@@ -512,7 +512,6 @@ API层的实现代码，将实现如下关键点：
 | 申请开通 | 登录访问 | 已登录未开通博客的用户 |
 | 开通审核 | 角色访问 | 博客管理员             |
 | 更新     | 角色访问 | 博客管理员、博主        |
-| 删除     | 角色访问 | 博客管理员             |
 
 实现代码如下：
 ```C#
@@ -606,23 +605,6 @@ public class BlogController : AdminApiController
     {
         Check.NotNull(dtos, nameof(dtos));
         OperationResult result = await BlogsContract.UpdateBlogs(dtos);
-        return result.ToAjaxResult();
-    }
-
-    /// <summary>
-    /// 删除博客信息
-    /// </summary>
-    /// <param name="ids">博客信息编号</param>
-    /// <returns>JSON操作结果</returns>
-    [HttpPost]
-    [ModuleInfo]
-    [DependOnFunction("Read")]
-    [ServiceFilter(typeof(UnitOfWorkAttribute))]
-    [Description("删除")]
-    public async Task<AjaxResult> Delete(int[] ids)
-    {
-        Check.NotNull(ids, nameof(ids));
-        OperationResult result = await BlogsContract.DeleteBlogs(ids);
         return result.ToAjaxResult();
     }
 }
@@ -784,10 +766,11 @@ public class PostController : AdminApiController
 #### 注册两个测试用户，并给用户分配角色
 新增测试用户如下：
 
-用户名           | 用户昵称       | 分配角色
------------------|------------|------
-123202901@qq.com | 博客管理员测试 | 博客管理员
-31529019@qq.com  | 博主测试       | 博主
+用户名            | 用户昵称       | 分配角色
+------------------|------------|------
+123202901@qq.com  | 博客管理员测试 | 博客管理员
+31529019@qq.com   | 博主测试01     | 博主
+2048949401@qq.com | 博主测试02     | 博主
 
 ### 功能权限
 
@@ -808,7 +791,10 @@ API模块`Module`对应的是后端的API模块，将Module分配给角色`Role`
 * 博客管理员用户功能权限
 ![博客管理员用户功能权限](../../assets/imgs/quick/steps/controller/010.png "博客管理员用户功能权限"){.img-fluid tag=3}
 * 博主用户功能权限
+    * 测试博主01
 ![博主用户功能权限](../../assets/imgs/quick/steps/controller/011.png "博主用户功能权限"){.img-fluid tag=3}
+    * 测试博主02
+![博主用户功能权限](../../assets/imgs/quick/steps/controller/014.png "博主用户功能权限"){.img-fluid tag=3}
 
 ### 数据权限
 

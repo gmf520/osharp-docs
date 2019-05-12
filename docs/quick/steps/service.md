@@ -108,13 +108,6 @@ public interface IBlogsContract
     /// <returns>业务操作结果</returns>
     Task<OperationResult> UpdateBlogs(params BlogInputDto[] dtos);
 
-    /// <summary>
-    /// 删除博客信息
-    /// </summary>
-    /// <param name="ids">要删除的博客信息编号</param>
-    /// <returns>业务操作结果</returns>
-    Task<OperationResult> DeleteBlogs(params int[] ids);
-
     #endregion
 
     #region 文章信息业务
@@ -901,25 +894,6 @@ public partial class BlogsService
             {
                 throw new OsharpException($"Url为“{dto.Url}”的博客已存在，不能重复");
             }
-        });
-    }
-
-    /// <summary>
-    /// 删除博客信息
-    /// </summary>
-    /// <param name="ids">要删除的博客信息编号</param>
-    /// <returns>业务操作结果</returns>
-    public virtual Task<OperationResult> DeleteBlogs(params int[] ids)
-    {
-        Check.NotNull(ids, nameof(ids));
-        
-        return BlogRepository.DeleteAsync(ids, entity =>
-        {
-            if (PostRepository.Query(m => m.BlogId == entity.Id).Any())
-            {
-                throw new OsharpException($"博客“{entity.Display}”中还有文章未删除，请先删除所有文章，再删除博客");
-            }
-            return Task.FromResult(0);
         });
     }
 }

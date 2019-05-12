@@ -12,7 +12,7 @@
 
 * 对象Mapper映射：数据传输对象`DTO` 与 实体类`Entity` 之间的转换与更新，如果都要通过手写代码来进行属性的一一对应赋值，是件很累人的事，通过 对象Mapper映射（例如AutoMapper）功能，只需进行一次配置，即可很方便的实现不同类型对象的数据转换与更新。
 
-#### 数据层文件夹布局
+### 数据层文件夹布局
 
 ```
 src                                     # 源代码文件夹
@@ -224,7 +224,7 @@ namespace Liuliu.Blogs.Blogs.Entities
     /// 实体类：博客信息
     /// </summary>
     [Description("博客信息")]
-    public class Blog : EntityBase<int>, ICreatedTime, ISoftDeletable
+    public class Blog : EntityBase<int>, ICreatedTime
     {
         /// <summary>
         /// 获取或设置 博客地址
@@ -249,11 +249,6 @@ namespace Liuliu.Blogs.Blogs.Entities
         public DateTime CreatedTime { get; set; }
 
         /// <summary>
-        /// 获取或设置 数据逻辑删除时间，为null表示正常数据，有值表示已逻辑删除
-        /// </summary>
-        public DateTime? DeletedTime { get; set; }
-
-        /// <summary>
         /// 获取或设置 作者编号
         /// </summary>
         [UserFlag]
@@ -274,7 +269,7 @@ namespace Liuliu.Blogs.Blogs.Entities
     /// 实体类：文章信息
     /// </summary>
     [Description("文章信息")]
-    public class Post:EntityBase<int>,ICreatedTime,ISoftDeletable
+    public class Post:EntityBase<int>, ICreatedTime, ISoftDeletable
     {
         /// <summary>
         /// 获取或设置 文章标题
@@ -661,7 +656,7 @@ public class BlogConfiguration : EntityTypeConfigurationBase<Blog, int>
     /// <param name="builder">实体类型创建器</param>
     public override void Configure(EntityTypeBuilder<Blog> builder)
     {
-        builder.HasIndex(m => new {m.Url, m.DeletedTime}).HasName("BlogUrlIndex").IsUnique();
+        builder.HasIndex(m => m.Url).HasName("BlogUrlIndex").IsUnique();
         builder.HasOne(m => m.User).WithOne().HasForeignKey<Blog>(m => m.UserId).OnDelete(DeleteBehavior.Restrict).IsRequired();
     }
 }

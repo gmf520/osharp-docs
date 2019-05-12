@@ -1,6 +1,6 @@
 # Project information
-site_name: 'OSharp 文档中心'
-site_description: osharp framework documents with markdown
+site_name: 'OSharp文档中心'
+site_description: OSharp快速开发框架文档中心，.NetCore 快速开发框架
 site_author: osharp.org
 site_url: https://docs.osharp.org/
 
