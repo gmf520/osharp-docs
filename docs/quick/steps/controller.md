@@ -193,7 +193,7 @@ public class DependOnFunctionAttribute : Attribute
 [HttpPost]
 [ModuleInfo]
 [DependOnFunction("Read")]
-[ServiceFilter(typeof(UnitOfWorkAttribute))]
+[UnitOfWork]
 [Description("新增")]
 public async Task<AjaxResult> Create(PostInputDto[] dtos)
 { }
@@ -327,7 +327,7 @@ public class UnitOfWorkAttribute : ActionFilterAttribute
     }
 }
 ```
-如一次请求中涉及数据的 新增、更新、删除 操作时，在 Action 上添加 `[ServiceFilter(typeof(UnitOfWorkAttribute))]`，即可实现事务自动提交。
+如一次请求中涉及数据的 新增、更新、删除 操作时，在 Action 上添加 `[UnitOfWork]`，即可实现事务自动提交。
 ```C# hl_lines="8"
 /// <summary>
 /// 新增文章
@@ -336,7 +336,7 @@ public class UnitOfWorkAttribute : ActionFilterAttribute
 /// <returns>JSON操作结果</returns>
 [HttpPost]
 [ModuleInfo]
-[ServiceFilter(typeof(UnitOfWorkAttribute))]
+[UnitOfWork]
 [Description("新增")]
 public async Task<AjaxResult> Create(PostInputDto[] dtos)
 { }
@@ -498,7 +498,7 @@ API层的实现代码，将实现如下关键点：
 * 使用`[ModuleInfo]`特性来定义API模块的树形结构
 * 使用`[DependOnFunction]`来定义各API模块之间的依赖关系
 * 在`AdminApiController`基类中，已经添加了`[RoleLimit]`特性来配置所有`Admin`区域的API都使用 **角色限制** 的访问控制，如需特殊的访问控制，可在 Action 上单独配置
-* 涉及实体 `增加、更新、删除` 操作的业务，按需要添加 `[ServiceFilter(typeof(UnitOfWorkAttribute))]` 特性来实现事务自动提交
+* 涉及实体 `增加、更新、删除` 操作的业务，按需要添加 `[UnitOfWork]` 特性来实现事务自动提交
 
 !!! node
     API模块对角色的权限分配，将在后台管理界面中进行权限分配。
@@ -565,7 +565,7 @@ public class BlogController : AdminApiController
     [HttpPost]
     [ModuleInfo]
     [DependOnFunction("Read")]
-    [ServiceFilter(typeof(UnitOfWorkAttribute))]
+    [UnitOfWork]
     [Description("申请")]
     public async Task<AjaxResult> Apply(BlogInputDto dto)
     {
@@ -582,7 +582,7 @@ public class BlogController : AdminApiController
     [HttpPost]
     [ModuleInfo]
     [DependOnFunction("Read")]
-    [ServiceFilter(typeof(UnitOfWorkAttribute))]
+    [UnitOfWork]
     [Description("申请")]
     public async Task<AjaxResult> Verify(BlogVerifyDto dto)
     {
@@ -599,7 +599,7 @@ public class BlogController : AdminApiController
     [HttpPost]
     [ModuleInfo]
     [DependOnFunction("Read")]
-    [ServiceFilter(typeof(UnitOfWorkAttribute))]
+    [UnitOfWork]
     [Description("更新")]
     public async Task<AjaxResult> Update(BlogInputDto[] dtos)
     {
@@ -673,7 +673,7 @@ public class PostController : AdminApiController
     [HttpPost]
     [ModuleInfo]
     [DependOnFunction("Read")]
-    [ServiceFilter(typeof(UnitOfWorkAttribute))]
+    [UnitOfWork]
     [Description("新增")]
     public virtual async Task<AjaxResult> Create(PostInputDto[] dtos)
     {
@@ -690,7 +690,7 @@ public class PostController : AdminApiController
     [HttpPost]
     [ModuleInfo]
     [DependOnFunction("Read")]
-    [ServiceFilter(typeof(UnitOfWorkAttribute))]
+    [UnitOfWork]
     [Description("更新")]
     public virtual async Task<AjaxResult> Update(PostInputDto[] dtos)
     {
@@ -707,7 +707,7 @@ public class PostController : AdminApiController
     [HttpPost]
     [ModuleInfo]
     [DependOnFunction("Read")]
-    [ServiceFilter(typeof(UnitOfWorkAttribute))]
+    [UnitOfWork]
     [Description("删除")]
     public virtual async Task<AjaxResult> Delete(int[] ids)
     {

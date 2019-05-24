@@ -559,7 +559,7 @@ export class BlogsModule { }
 
 菜单数据指的是后台管理界面左侧导航菜单，在 **assets/osharp/app-data.json** 文件中进行配置。
 
-```json hl_lines="23 24 25 26 27 28 29 30 31 32 33 34 35 36"
+```json hl_lines="23 24 25 26 27 28 29 30 31 32 33 34 35 36 37"
 {
   "app": {
     "name": "OSharp Framework",
