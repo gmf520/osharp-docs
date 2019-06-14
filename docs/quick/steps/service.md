@@ -30,16 +30,18 @@ OSharp 的业务模块代码结构设计，也是根据这一原则来设计的�
 
 综上，服务层代码布局如下所示：
 
-
 ```
-src                                 # 源代码文件夹
-└─Liuliu.Blogs.Core                 # 项目核心工程
-   └─Blogs                          # 博客模块文件夹
-       ├─BlogsPack.cs               # 博客模块入口类
-       ├─BlogsService.cs            # 博客服务类
-       ├─BlogsService.Blog.cs       # 博客模块-博客服务类
-       ├─BlogsService.Post.cs       # 博客模块-文章服务类
-       └─IBlogsContract.cs          # 博客模块服务接口
+src                                         # 源代码文件夹
+└─Liuliu.Blogs.Core                         # 项目核心工程
+   └─Blogs                                  # 博客模块文件夹
+        ├─BlogsPack.cs                      # 博客模块入口类
+        ├─BlogsService.cs                   # 博客服务类
+        ├─BlogsService.Blog.cs              # 博客模块-博客服务类
+        ├─BlogsService.Post.cs              # 博客模块-文章服务类
+        ├─IBlogsContract.cs                 # 博客模块服务接口
+        └─Events                            # 业务事件文件夹
+            ├─VerifyBlogEventData.cs        # 审核博客事件数据
+            └─VerifyBlogEventHandler.cs     # 审核博客事件处理器
 ```
 
 ## 服务接口 `IBlogsContract`
@@ -95,10 +97,9 @@ public interface IBlogsContract
     /// <summary>
     /// 审核博客信息
     /// </summary>
-    /// <param name="id">博客编号</param>
-    /// <param name="isEnabled">是否通过</param>
+    /// <param name="dto">审核博客信息DTO信息</param>
     /// <returns>业务操作结果</returns>
-    Task<OperationResult> VerifyBlog(int id, bool isEnabled);
+    Task<OperationResult> VerifyBlog(BlogVerifyDto dto);
 
     /// <summary>
     /// 更新博客信息
@@ -106,13 +107,6 @@ public interface IBlogsContract
     /// <param name="dtos">包含更新信息的博客信息DTO信息</param>
     /// <returns>业务操作结果</returns>
     Task<OperationResult> UpdateBlogs(params BlogInputDto[] dtos);
-
-    /// <summary>
-    /// 删除博客信息
-    /// </summary>
-    /// <param name="ids">要删除的博客信息编号</param>
-    /// <returns>业务操作结果</returns>
-    Task<OperationResult> DeleteBlogs(params int[] ids);
 
     #endregion
 
@@ -173,17 +167,26 @@ public class BlogsService : IBlogsContract
     private readonly IRepository<Blog, int> _blogRepository;
     private readonly IRepository<Post, int> _postRepository;
     private readonly IRepository<User, int> _userRepository;
+    private readonly IRepository<Role, int> _roleRepository;
+    private readonly IRepository<UserRole, Guid> _userRoleRepository;
+    private readonly IEventBus _eventBus;
 
     /// <summary>
     /// 初始化一个<see cref="BlogsService"/>类型的新实例
     /// </summary>
     public BlogsService(IRepository<Blog, int> blogRepository,
         IRepository<Post, int> postRepository,
-        IRepository<User, int> userRepository)
+        IRepository<User, int> userRepository,
+        IRepository<Role, int> roleRepository,
+        IRepository<UserRole, Guid> userRoleRepository,
+        IEventBus eventBus)
     {
         _blogRepository = blogRepository;
         _postRepository = postRepository;
         _userRepository = userRepository;
+        _roleRepository = roleRepository;
+        _userRoleRepository = userRoleRepository;
+        _eventBus = eventBus;
     }
 }
 
@@ -226,6 +229,21 @@ public class BlogsService : IBlogsContract
     /// 获取 用户仓储对象
     /// </summary>
     protected IRepository<User, int> UserRepository => _serviceProvider.GetService<IRepository<User, int>>();
+
+    /// <summary>
+    /// 获取 角色仓储对象
+    /// </summary>
+    protected IRepository<Role, int> RoleRepository => _serviceProvider.GetService<IRepository<Role, int>>();
+
+    /// <summary>
+    /// 获取 角色仓储对象
+    /// </summary>
+    protected IRepository<UserRole, Guid> UserRoleRepository => _serviceProvider.GetService<IRepository<UserRole, Guid>>();
+
+    /// <summary>
+    /// 获取 事件总线对象
+    /// </summary>
+    protected IEventBus EventBus => _serviceProvider.GetService<IEventBus>();
 }
 ```
 
@@ -437,6 +455,268 @@ IUnitOfWork unitOfWork = HttpContext.RequestServices.GetUnitOfWork<User, int>();
 unitOfWork.Commit();
 ```
 
+### 业务服务事件订阅与发布
+
+业务服务事件，是通过 事件总线`EventBus` 来实现的，OSharp构建了一个简单的事件总线基础建设，可以很方便地订阅和发布业务事件。
+
+#### 订阅事件
+订阅事件很简单，只需要定义一组配套的 事件数据`EventData` 和相应的 事件处理器`EventHandler`，即可完成事件订阅的工作。
+
+##### IEventData
+事件数据`EventData` 是业务服务发布事件时向事件总线传递的数据，每一种业务，都有特定的事件数据，一个事件数据可触发多个事件处理器
+定义一个事件数据，需要实现 `IEventData` 接口
+```C# 
+/// <summary>
+/// 定义事件数据，所有事件都要实现该接口
+/// </summary>
+public interface IEventData
+{
+    /// <summary>
+    /// 获取 事件编号
+    /// </summary>
+    Guid Id { get; }
+
+    /// <summary>
+    /// 获取 事件发生的时间
+    /// </summary>
+    DateTime EventTime { get; }
+
+    /// <summary>
+    /// 获取或设置 事件源，触发事件的对象
+    /// </summary>
+    object EventSource { get; set; }
+}
+```
+
+##### EventDataBase
+
+为了方便 事件数据 的定义，OSharp定义了一个通用事件数据基类`EventDataBase`，继承此基类，只需要添加事件触发需要的业务数据即可
+```C#
+/// <summary>
+/// 事件源数据信息基类
+/// </summary>
+public abstract class EventDataBase : IEventData
+{
+    /// <summary>
+    /// 初始化一个<see cref="EventDataBase"/>类型的新实例
+    /// </summary>
+    protected EventDataBase()
+    {
+        Id = Guid.NewGuid();
+        EventTime = DateTime.Now;
+    }
+
+    /// <summary>
+    /// 获取 事件编号
+    /// </summary>
+    public Guid Id { get; }
+
+    /// <summary>
+    /// 获取 事件发生时间
+    /// </summary>
+    public DateTime EventTime { get; }
+
+    /// <summary>
+    /// 获取或设置 触发事件的对象
+    /// </summary>
+    public object EventSource { get; set; }
+}
+```
+
+##### IEventHandler
+
+业务事件的处理逻辑，是通过 事件处理器 `EventHandler` 来实现的，事件处理器应遵从 `单一职责` 原则，一个处理器只做一件事，业务服务层发布一项 事件数据，可触发多个 事件处理器
+```C#
+/// <summary>
+/// 定义事件处理器，所有事件处理都要实现该接口
+/// EventBus中，Handler的调用是同步执行的，如果需要触发就不管的异步执行，可以在实现EventHandler的Handle逻辑时使用Task.Run
+/// </summary>
+[IgnoreDependency]
+public interface IEventHandler
+{
+    /// <summary>
+    /// 是否可处理指定事件
+    /// </summary>
+    /// <param name="eventData">事件源数据</param>
+    /// <returns>是否可处理</returns>
+    bool CanHandle(IEventData eventData);
+
+    /// <summary>
+    /// 事件处理
+    /// </summary>
+    /// <param name="eventData">事件源数据</param>
+    void Handle(IEventData eventData);
+
+    /// <summary>
+    /// 异步事件处理
+    /// </summary>
+    /// <param name="eventData">事件源数据</param>
+    /// <param name="cancelToken">异步取消标识</param>
+    /// <returns></returns>
+    Task HandleAsync(IEventData eventData, CancellationToken cancelToken = default(CancellationToken));
+}
+
+
+/// <summary>
+/// 定义泛型事件处理器
+/// EventBus中，Handler的调用是同步执行的，如果需要触发就不管的异步执行，可以在实现EventHandler的Handle逻辑时使用Task.Run
+/// </summary>
+/// <typeparam name="TEventData">事件源数据</typeparam>
+[IgnoreDependency]
+public interface IEventHandler<in TEventData> : IEventHandler where TEventData : IEventData
+{
+    /// <summary>
+    /// 事件处理
+    /// </summary>
+    /// <param name="eventData">事件源数据</param>
+    void Handle(TEventData eventData);
+
+    /// <summary>
+    /// 异步事件处理
+    /// </summary>
+    /// <param name="eventData">事件源数据</param>
+    /// <param name="cancelToken">异步取消标识</param>
+    Task HandleAsync(TEventData eventData, CancellationToken cancelToken = default(CancellationToken));
+}
+```
+
+##### EventHandlerBase
+同样的，为了方便 事件处理器 的定义，OSharp定义了一个通用的事件处理器基类`EventHandlerBase<TEventData>`，继承此基类，只需要实现核心的事件处理逻辑即可
+```C#
+/// <summary>
+/// 事件处理器基类
+/// </summary>
+public abstract class EventHandlerBase<TEventData> : IEventHandler<TEventData> where TEventData : IEventData
+{
+    /// <summary>
+    /// 是否可处理指定事件
+    /// </summary>
+    /// <param name="eventData">事件源数据</param>
+    /// <returns>是否可处理</returns>
+    public virtual bool CanHandle(IEventData eventData)
+    {
+        return eventData.GetType() == typeof(TEventData);
+    }
+
+    /// <summary>
+    /// 事件处理
+    /// </summary>
+    /// <param name="eventData">事件源数据</param>
+    public virtual void Handle(IEventData eventData)
+    {
+        if (!CanHandle(eventData))
+        {
+            return;
+        }
+        Handle((TEventData)eventData);
+    }
+
+    /// <summary>
+    /// 异步事件处理
+    /// </summary>
+    /// <param name="eventData">事件源数据</param>
+    /// <param name="cancelToken">异步取消标识</param>
+    /// <returns></returns>
+    public virtual Task HandleAsync(IEventData eventData, CancellationToken cancelToken = default(CancellationToken))
+    {
+        if (!CanHandle(eventData))
+        {
+            return Task.FromResult(0);
+        }
+        return HandleAsync((TEventData)eventData, cancelToken);
+    }
+
+    /// <summary>
+    /// 事件处理
+    /// </summary>
+    /// <param name="eventData">事件源数据</param>
+    public abstract void Handle(TEventData eventData);
+
+    /// <summary>
+    /// 异步事件处理
+    /// </summary>
+    /// <param name="eventData">事件源数据</param>
+    /// <param name="cancelToken">异步取消标识</param>
+    /// <returns>是否成功</returns>
+    public virtual Task HandleAsync(TEventData eventData, CancellationToken cancelToken = default(CancellationToken))
+    {
+        return Task.Run(() => Handle(eventData), cancelToken);
+    }
+}
+```
+
+#### 发布事件
+事件的发布，就相当简单了，只需要实例化一个事件数据`EventData`的实例，然后通过`IEventBus.Publish(eventData)`即可发布事件，触发该`EventData`的所有订阅处理器
+
+```C#
+XXXEventData eventData = new XXXEventData()
+{
+    // ...
+};
+EventBus.Publish(eventData);
+
+```
+
+#### 博客模块的业务事件实现
+
+回到我们的 `Liuliu.Blogs` 项目，根据 <[业务模块设计#博客业务需求分析](index.md#_4)> 的需求分析的第二条，审核博客之后需要发邮件通知用户，发邮件属于审核博客业务计划外的需求，使用 业务事件 来实现正当其时。
+
+* 审核博客业务事件数据
+```C#
+/// <summary>
+/// 审核博客事件数据
+/// </summary>
+public class VerifyBlogEventData : EventDataBase
+{
+    /// <summary>
+    /// 获取或设置 博客名称
+    /// </summary>
+    public string BlogName { get; set; }
+
+    /// <summary>
+    /// 获取或设置 用户名
+    /// </summary>
+    public string UserName { get; set; }
+
+    /// <summary>
+    /// 获取或设置 审核是否通过
+    /// </summary>
+    public bool IsEnabled { get; set; }
+
+    /// <summary>
+    /// 获取或设置 审核理由
+    /// </summary>
+    public string Reason { get; set; }
+}
+```
+
+* 审核博客业务事件处理器
+```C#
+/// <summary>
+/// 审核博客事件处理器
+/// </summary>
+public class VerifyBlogEventHandler : EventHandlerBase<VerifyBlogEventData>
+{
+    private readonly ILogger _logger;
+
+    /// <summary>
+    /// 初始化一个<see cref="VerifyBlogEventHandler"/>类型的新实例
+    /// </summary>
+    public VerifyBlogEventHandler(IServiceProvider serviceProvider)
+    {
+        _logger = serviceProvider.GetService<ILoggerFactory>().CreateLogger<VerifyBlogEventHandler>();
+    }
+
+    /// <summary>事件处理</summary>
+    /// <param name="eventData">事件源数据</param>
+    public override void Handle(VerifyBlogEventData eventData)
+    {
+        _logger.LogInformation(
+            $"触发 审核博客事件处理器，用户“{eventData.UserName}”的博客“{eventData.BlogName}”审核结果：{(eventData.IsEnabled ? "通过" : "未通过")}，审核理由：{eventData.Reason}");
+    }
+}
+```
+
 ### 博客模块的服务实现
 回到我们的 `Liuliu.Blogs` 项目，根据 <[业务模块设计#服务层](index.md#_6)> 的需求分析，综合使用OSharp框架提供的基础建设，博客模块的业务服务实现如下：
 
@@ -538,22 +818,65 @@ public partial class BlogsService
     /// <summary>
     /// 审核博客信息
     /// </summary>
-    /// <param name="id">博客编号</param>
-    /// <param name="isEnabled">是否通过</param>
+    /// <param name="dto">审核博客信息DTO信息</param>
     /// <returns>业务操作结果</returns>
-    public virtual async Task<OperationResult> VerifyBlog(int id, bool isEnabled)
+    public virtual async Task<OperationResult> VerifyBlog(BlogVerifyDto dto)
     {
-        Blog blog = await BlogRepository.GetAsync(id);
+        Check.Validate(dto, nameof(dto));
+        
+        Blog blog = await BlogRepository.GetAsync(dto.Id);
         if (blog == null)
         {
-            return new OperationResult(OperationResultType.QueryNull, $"编号为“{id}”的博客信息不存在");
+            return new OperationResult(OperationResultType.QueryNull, $"编号为“{dto.Id}”的博客信息不存在");
         }
 
-        blog.IsEnabled = isEnabled;
+        // 更新博客
+        blog.IsEnabled = dto.IsEnabled;
         int count = await BlogRepository.UpdateAsync(blog);
-        return count > 0
-            ? new OperationResult(OperationResultType.Success, $"博客“{blog.Display}”审核 {(isEnabled ? "通过" : "未通过")}")
+
+        User user = await UserRepository.GetAsync(blog.UserId);
+        if (user == null)
+        {
+            return new OperationResult(OperationResultType.QueryNull, $"编号为“{blog.UserId}”的用户信息不存在");
+        }
+
+        // 如果开通博客，给用户开通博主身份
+        if (dto.IsEnabled)
+        {
+            // 查找博客主的角色，博主角色名可由配置系统获得
+            const string roleName = "博主";
+            // 用于CUD操作的实体，要用 TrackQuery 方法来查询出需要的数据，不能用 Query，因为 Query 会使用 AsNoTracking
+            Role role = RoleRepository.TrackQuery(m => m.Name == roleName).FirstOrDefault();
+            if (role == null)
+            {
+                return new OperationResult(OperationResultType.QueryNull, $"名称为“{roleName}”的角色信息不存在");
+            }
+
+            UserRole userRole = UserRoleRepository.TrackQuery(m => m.UserId == user.Id && m.RoleId == role.Id)
+                .FirstOrDefault();
+            if (userRole == null)
+            {
+                userRole = new UserRole() { UserId = user.Id, RoleId = role.Id, IsLocked = false };
+                count += await UserRoleRepository.InsertAsync(userRole);
+            }
+        }
+
+        OperationResult result = count > 0
+            ? new OperationResult(OperationResultType.Success, $"博客“{blog.Display}”审核 {(dto.IsEnabled ? "通过" : "未通过")}，审核理由：{dto.Reason}")
             : OperationResult.NoChanged;
+        if (result.Succeeded)
+        {
+            VerifyBlogEventData eventData = new VerifyBlogEventData()
+            {
+                BlogName = blog.Display,
+                UserName = user.NickName,
+                IsEnabled = blog.IsEnabled,
+                Reason = dto.Reason
+            };
+            EventBus.Publish(eventData);
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -563,29 +886,14 @@ public partial class BlogsService
     /// <returns>业务操作结果</returns>
     public virtual Task<OperationResult> UpdateBlogs(params BlogInputDto[] dtos)
     {
+        Check.Validate<BlogInputDto, int>(dtos, nameof(dtos) );
+
         return BlogRepository.UpdateAsync(dtos, async (dto, entity) =>
         {
             if (await BlogRepository.CheckExistsAsync(m => m.Url == dto.Url, dto.Id))
             {
                 throw new OsharpException($"Url为“{dto.Url}”的博客已存在，不能重复");
             }
-        });
-    }
-
-    /// <summary>
-    /// 删除博客信息
-    /// </summary>
-    /// <param name="ids">要删除的博客信息编号</param>
-    /// <returns>业务操作结果</returns>
-    public virtual Task<OperationResult> DeleteBlogs(params int[] ids)
-    {
-        return BlogRepository.DeleteAsync(ids, entity =>
-        {
-            if (PostRepository.Query(m => m.BlogId == entity.Id).Any())
-            {
-                throw new OsharpException($"博客“{entity.Display}”中还有文章未删除，请先删除所有文章，再删除博客");
-            }
-            return Task.FromResult(0);
         });
     }
 }
@@ -684,54 +992,54 @@ public partial class BlogsService
 前面多次提到，每个Pack模块都是继承自一个 模块基类`OsharpPack`，这个基类用于定义 模块初始化`UsePack` 过程中未涉及 `AspNetCore` 环境的模块。
 ```C#
 /// <summary>
-    /// OSharp模块基类
+/// OSharp模块基类
+/// </summary>
+public abstract class OsharpPack
+{
+    /// <summary>
+    /// 获取 模块级别，级别越小越先启动
     /// </summary>
-    public abstract class OsharpPack
+    public virtual PackLevel Level => PackLevel.Business;
+
+    /// <summary>
+    /// 获取 模块启动顺序，模块启动的顺序先按级别启动，同一级别内部再按此顺序启动，
+    /// 级别默认为0，表示无依赖，需要在同级别有依赖顺序的时候，再重写为>0的顺序值
+    /// </summary>
+    public virtual int Order => 0;
+
+    /// <summary>
+    /// 获取 是否已可用
+    /// </summary>
+    public bool IsEnabled { get; protected set; }
+
+    /// <summary>
+    /// 将模块服务添加到依赖注入服务容器中
+    /// </summary>
+    /// <param name="services">依赖注入服务容器</param>
+    /// <returns></returns>
+    public virtual IServiceCollection AddServices(IServiceCollection services)
     {
-        /// <summary>
-        /// 获取 模块级别，级别越小越先启动
-        /// </summary>
-        public virtual PackLevel Level => PackLevel.Business;
-
-        /// <summary>
-        /// 获取 模块启动顺序，模块启动的顺序先按级别启动，同一级别内部再按此顺序启动，
-        /// 级别默认为0，表示无依赖，需要在同级别有依赖顺序的时候，再重写为>0的顺序值
-        /// </summary>
-        public virtual int Order => 0;
-
-        /// <summary>
-        /// 获取 是否已可用
-        /// </summary>
-        public bool IsEnabled { get; protected set; }
-
-        /// <summary>
-        /// 将模块服务添加到依赖注入服务容器中
-        /// </summary>
-        /// <param name="services">依赖注入服务容器</param>
-        /// <returns></returns>
-        public virtual IServiceCollection AddServices(IServiceCollection services)
-        {
-            return services;
-        }
-
-        /// <summary>
-        /// 应用模块服务
-        /// </summary>
-        /// <param name="provider">服务提供者</param>
-        public virtual void UsePack(IServiceProvider provider)
-        {
-            IsEnabled = true;
-        }
-
-        /// <summary>
-        /// 获取当前模块的依赖模块类型
-        /// </summary>
-        /// <returns></returns>
-        internal Type[] GetDependPackTypes(Type packType = null)
-        {
-            // ...
-        }
+        return services;
     }
+
+    /// <summary>
+    /// 应用模块服务
+    /// </summary>
+    /// <param name="provider">服务提供者</param>
+    public virtual void UsePack(IServiceProvider provider)
+    {
+        IsEnabled = true;
+    }
+
+    /// <summary>
+    /// 获取当前模块的依赖模块类型
+    /// </summary>
+    /// <returns></returns>
+    internal Type[] GetDependPackTypes(Type packType = null)
+    {
+        // ...
+    }
+}
 ```
 
 模块基类`OsharpPack` 定义了两个可重写属性：

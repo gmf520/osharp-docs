@@ -26,5 +26,10 @@ a.boxedThumb:hover {
 }
 
 .md-typeset {
-    font-size: 0.75rem
+    font-size: 0.75rem;
+}
+
+.md-nav--secondary,
+.md-nav--secondary .md-nav {
+    font-size: .6rem;
 }
