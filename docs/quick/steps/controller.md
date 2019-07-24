@@ -583,7 +583,7 @@ public class BlogController : AdminApiController
     [ModuleInfo]
     [DependOnFunction("Read")]
     [UnitOfWork]
-    [Description("申请")]
+    [Description("审核")]
     public async Task<AjaxResult> Verify(BlogVerifyDto dto)
     {
         Check.NotNull(dto, nameof(dto));
