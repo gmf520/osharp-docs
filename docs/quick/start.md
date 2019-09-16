@@ -17,28 +17,30 @@ OSharp 框架的后端是基于 .NetCore 的最新稳定版本的，目前最新
 安装完成后，在 `命令提示符` 或 `PowerShell` 窗口输入如下命令，即可查看到本机已安装的 .NetCore 的 SDK 和 Runtime 版本详细信息
 > dotnet --info
 
-我的电脑输出如下，可以看到，已经安装了 `2.2.203` 版本的 SDK 和 `2.2.4` 版本的 Runtime：
+我的电脑输出如下，可以看到，已经安装了 `2.2.402` 版本的 SDK 和 `2.2.7` 版本的 Runtime：
 ``` hl_lines="17 20"
 .NET Core SDK（反映任何 global.json）:
- Version:   2.2.203
- Commit:    e5bab63eca
+ Version:   2.2.402
+ Commit:    c7f2f96116
 
 运行时环境:
  OS Name:     Windows
- OS Version:  10.0.17763
+ OS Version:  10.0.18362
  OS Platform: Windows
  RID:         win10-x64
- Base Path:   C:\Program Files\dotnet\sdk\2.2.203\
+ Base Path:   C:\Program Files\dotnet\sdk\2.2.402\
 
 Host (useful for support):
-  Version: 2.2.4
-  Commit:  f95848e524
+  Version: 2.2.7
+  Commit:  b1e29ae826
 
 .NET Core SDKs installed:
-  2.2.203 [C:\Program Files\dotnet\sdk]
+  2.2.402 [C:\Program Files\dotnet\sdk]
 
 .NET Core runtimes installed:
-  Microsoft.NETCore.App 2.2.4 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
+  Microsoft.AspNetCore.All 2.2.7 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.All]
+  Microsoft.AspNetCore.App 2.2.7 [C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App]
+  Microsoft.NETCore.App 2.2.7 [C:\Program Files\dotnet\shared\Microsoft.NETCore.App]
 
 To install additional .NET Core runtimes or SDKs:
   https://aka.ms/dotnet-download
