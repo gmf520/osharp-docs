@@ -293,7 +293,7 @@ export abstract class STComponentBase {
 ```ts
 import { Component, OnInit, Injector } from '@angular/core';
 import { SFUISchema } from '@delon/form';
-import { OsharpSTColumn } from '@shared/osharp/services/ng-alain.types';
+import { OsharpSTColumn } from '@shared/osharp/services/alain.types';
 import { STComponentBase, } from '@shared/osharp/components/st-component-base';
 import { STData } from '@delon/abc';
 import { AjaxResult } from '@shared/osharp/osharp.model';
@@ -409,7 +409,7 @@ export class BlogComponent extends STComponentBase implements OnInit {
   <div>
     <button nz-button (click)="st.reload()"><i nz-icon nzType="reload" nzTheme="outline"></i>刷新</button>
     <button nz-button (click)="create()" acl="Root.Admin.Blogs.Blog.Apply" *ngIf="data.length == 0"><i nz-icon type="plus-circle" theme="outline"></i>申请</button>
-    <app-ad-search [request]="request" [columns]="columns" (submited)="search($event)"></app-ad-search>
+    <osharp-ad-search [request]="request" [columns]="columns" (submited)="search($event)"></osharp-ad-search>
   </div>
   <st #st [data]="readUrl" [columns]="columns" [req]="req" [res]="res" [(pi)]="request.PageCondition.PageIndex" [(ps)]="request.PageCondition.PageSize" [page]="page" size="small" [scroll]="{x:'800px'}" multiSort
     (change)="change($event)" (error)="error($event)"></st>
@@ -430,7 +430,7 @@ export class BlogComponent extends STComponentBase implements OnInit {
 ```ts
 import { Component, OnInit, Injector } from '@angular/core';
 import { SFUISchema } from '@delon/form';
-import { OsharpSTColumn } from '@shared/osharp/services/ng-alain.types';
+import { OsharpSTColumn } from '@shared/osharp/services/alain.types';
 import { STComponentBase, } from '@shared/osharp/components/st-component-base';
 
 @Component({
@@ -485,7 +485,7 @@ export class PostComponent extends STComponentBase implements OnInit {
   <div>
     <button nz-button (click)="st.reload()"><i nz-icon nzType="reload" nzTheme="outline"></i>刷新</button>
     <button nz-button (click)="create()" acl="Root.Admin.Blogs.Post.Create"><i nz-icon type="plus-circle" theme="outline"></i>新增</button>
-    <app-ad-search [request]="request" [columns]="columns" (submited)="search($event)"></app-ad-search>
+    <osharp-ad-search [request]="request" [columns]="columns" (submited)="search($event)"></osharp-ad-search>
   </div>
   <st #st [data]="readUrl" [columns]="columns" [req]="req" [res]="res" [(pi)]="request.PageCondition.PageIndex" [(ps)]="request.PageCondition.PageSize" [page]="page" size="small"
     [scroll]="{x:'900px'}" multiSort (change)="change($event)" (error)="error($event)"></st>
