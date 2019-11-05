@@ -57,7 +57,7 @@ To install additional .NET Core runtimes or SDKs:
 * Visual Studio 2019：开发 .NET 程序，当前首先宇宙最强IDE **Visual Studio**，
     * .NetCore 2.2 的可用VS版本为 VS2017 和 VS2019，推荐使用 VS2019。 
     * .NetCore 3.0 则要求VS版本为 VS2019 16.3+ ，推荐将VS2019更新至最新版本。
-* Visual Studio Code：如果你觉得VS太过笨重，喜欢比较轻量级的IDE，VS Code 也是个很不错的选择，只需装上 `C#` 插件即可完美运行 .NetCore 代码。VS Code 也是目前最好用的前端IDE，后面将作为前端IDE进行前端代码的开发。
+* Visual Studio Code：如果你觉得VS太过笨重，喜欢比较轻量级的IDE，VS Code 也是个很不错的选择，只需装上 `C#` 插件即可完美运行 .NetCore 代码。VS Code 也是目前最好用的前端IDE，后面将作为前端IDE进行前端代码的开发与运行。
 
 两个IDE都可以在如下的地址中下载：
 > https://visualstudio.microsoft.com/zh-hans/downloads/
