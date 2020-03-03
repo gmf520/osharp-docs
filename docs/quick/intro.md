@@ -11,27 +11,27 @@ OSharpNS 全称 OSharp Framework with .NetStandard2.x，是一个基于`.NetStan
 
 ### 各工程简介
 
-> + OSharp【框架核心组件】：框架的核心组件，包含一系列快速开发中经常用到的Utility辅助工具功能，框架各个组件的核心接口定义，部分核心功能的实现
-> + OSharp.AspNetCore【AspNetCore组件】：AspNetCore组件，提供AspNetCore的服务端功能的封装
-> + OSharp.Authorization.Datas 【OSharp 数据权限组件】：OSharp 数据权限组件，对应用中数据权限进行授权的设计实现
-> + OSharp.Authorization.Functions【OSharp 功能权限组件】：OSharp 功能权限组件，API功能权限授权的设计实现
-> + OSharp.AutoMapper【对象映射组件】：AutoMapper 对象映射组件，封装基于AutoMapper的对象映射实现
-> + OSharp.EntityFrameworkCore【EFCore 数据组件】：EFCore数据访问组件，封装EntityFrameworkCore数据访问功能的实现
-> + OSharp.EntityFrameworkCore.MySql【EFCore MySql 数据组件】：EFCore MySql数据访问组件，封装MySql的EntityFrameworkCore数据访问功能的实现
-> + OSharp.EntityFrameworkCore.SqlServer【EFCore SqlServer 数据组件】：EFCore SqlServer数据访问组件，封装SqlServer的EntityFrameworkCore数据访问功能的实现
-> + OSharp.EntityFrameworkCore.Sqlite【EFCore Sqlite 数据组件】：EFCore Sqlite数据访问组件，封装Sqlite的EntityFrameworkCore数据访问功能的实现
-> + OSharp.EntityFrameworkCore.PostgreSql【EFCore PostgreSql 数据组件】：EFCore PostgreSql数据访问组件，封装PostgreSql的EntityFrameworkCore数据访问功能的实现
-> + OSharp.EntityFrameworkCore.Oracle【EFCore PostgreSql 数据组件】：EFCore Oracle数据访问组件，封装Oracle的EntityFrameworkCore数据访问功能的实现
-> + OSharp.Hangfire【后台任务组件】：封装基于Hangfire后台任务的服务端实现
-> + OSharp.Identity【身份认证组件】：使用AspNetCore的Identity为基础实现身份认证的封装
-> + OSharp.IdentityServer【OSharp IdentityServer组件】:OSharp IdentityServer组件，基于IdentityServer4提供身份认证与客户端授权的实现
-> + OSharp.IdentityServer.EntityConfiguration【OSharp IdentityServer EFCore存储配置组件】:OSharp IdentityServer EFCore存储配置组件，对IdentityServer4的存储进行EFCore映射配置
-> + OSharp.Log4Net【日志组件】：基于Log4Net的日志记录组件
-> + OSharp.MiniProfiler【MiniProfiler组件】：基于MiniProfiler实现的性能监测组件
-> + OSharpNS.NLog【OSharp NLog组件】:OSharp NLog组件，封装使用nlog组件来实现框架的日志输出功能
-> + OSharp.Redis【缓存组件】：基于Redis的分布式缓存客户端组件
-> + OSharp.Swagger【SwaggerAPI组件】：基于Swagger生成MVC的Action的API测试接口信息
-> + OSharp.Wpf【OSharp Wpf 客户端组件】：OSharp Wpf 客户端组件，封装Wpf客户端的辅助操作
+> + **OSharp**【框架核心组件】：框架的核心组件，包含一系列快速开发中经常用到的Utility辅助工具功能，框架各个组件的核心接口定义，部分核心功能的实现
+> + **OSharp.AspNetCore**【AspNetCore组件】：AspNetCore组件，提供AspNetCore的服务端功能的封装
+> + **OSharp.Authorization.Datas** 【OSharp 数据权限组件】：OSharp 数据权限组件，对应用中数据权限进行授权的设计实现
+> + **OSharp.Authorization.Functions**【OSharp 功能权限组件】：OSharp 功能权限组件，API功能权限授权的设计实现
+> + **OSharp.AutoMapper**【对象映射组件】：AutoMapper 对象映射组件，封装基于AutoMapper的对象映射实现
+> + **OSharp.EntityFrameworkCore**【EFCore 数据组件】：EFCore数据访问组件，封装EntityFrameworkCore数据访问功能的实现
+> + **OSharp.EntityFrameworkCore.MySql**【EFCore MySql 数据组件】：EFCore MySql数据访问组件，封装MySql的EntityFrameworkCore数据访问功能的实现
+> + **OSharp.EntityFrameworkCore.SqlServer**【EFCore SqlServer 数据组件】：EFCore SqlServer数据访问组件，封装SqlServer的EntityFrameworkCore数据访问功能的实现
+> + **OSharp.EntityFrameworkCore.Sqlite**【EFCore Sqlite 数据组件】：EFCore Sqlite数据访问组件，封装Sqlite的EntityFrameworkCore数据访问功能的实现
+> + **OSharp.EntityFrameworkCore.PostgreSql**【EFCore PostgreSql 数据组件】：EFCore PostgreSql数据访问组件，封装PostgreSql的EntityFrameworkCore数据访问功能的实现
+> + **OSharp.EntityFrameworkCore.Oracle**【EFCore PostgreSql 数据组件】：EFCore Oracle数据访问组件，封装Oracle的EntityFrameworkCore数据访问功能的实现
+> + **OSharp.Hangfire**8*【后台任务组件】：封装基于Hangfire后台任务的服务端实现
+> + **OSharp.Identity**【身份认证组件】：使用AspNetCore的Identity为基础实现身份认证的封装
+> + **OSharp.IdentityServer**【OSharp IdentityServer组件】:OSharp IdentityServer组件，基于IdentityServer4提供身份认证与客户端授权的实现
+> + **OSharp.IdentityServer.EntityConfiguration**【OSharp IdentityServer EFCore存储配置组件】:OSharp IdentityServer EFCore存储配置组件，对IdentityServer4的存储进行EFCore映射配置
+> + **OSharp.Log4Net**【日志组件】：基于Log4Net的日志记录组件
+> + **OSharp.MiniProfiler**【MiniProfiler组件】：基于MiniProfiler实现的性能监测组件
+> + **OSharpNS.NLog**【OSharp NLog组件】:OSharp NLog组件，封装使用nlog组件来实现框架的日志输出功能
+> + **OSharp.Redis**【缓存组件】：基于Redis的分布式缓存客户端组件
+> + **OSharp.Swagger**【SwaggerAPI组件】：基于Swagger生成MVC的Action的API测试接口信息
+> + **OSharp.Wpf**【OSharp Wpf 客户端组件】：OSharp Wpf 客户端组件，封装Wpf客户端的辅助操作
 
 
 ### Nuget Packages
