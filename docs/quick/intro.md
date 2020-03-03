@@ -22,7 +22,7 @@ OSharpNS 全称 OSharp Framework with .NetStandard2.x，是一个基于`.NetStan
 > + **OSharp.EntityFrameworkCore.Sqlite**【EFCore Sqlite 数据组件】：EFCore Sqlite数据访问组件，封装Sqlite的EntityFrameworkCore数据访问功能的实现
 > + **OSharp.EntityFrameworkCore.PostgreSql**【EFCore PostgreSql 数据组件】：EFCore PostgreSql数据访问组件，封装PostgreSql的EntityFrameworkCore数据访问功能的实现
 > + **OSharp.EntityFrameworkCore.Oracle**【EFCore PostgreSql 数据组件】：EFCore Oracle数据访问组件，封装Oracle的EntityFrameworkCore数据访问功能的实现
-> + **OSharp.Hangfire**8*【后台任务组件】：封装基于Hangfire后台任务的服务端实现
+> + **OSharp.Hangfire**【后台任务组件】：封装基于Hangfire后台任务的服务端实现
 > + **OSharp.Identity**【身份认证组件】：使用AspNetCore的Identity为基础实现身份认证的封装
 > + **OSharp.IdentityServer**【OSharp IdentityServer组件】:OSharp IdentityServer组件，基于IdentityServer4提供身份认证与客户端授权的实现
 > + **OSharp.IdentityServer.EntityConfiguration**【OSharp IdentityServer EFCore存储配置组件】:OSharp IdentityServer EFCore存储配置组件，对IdentityServer4的存储进行EFCore映射配置
